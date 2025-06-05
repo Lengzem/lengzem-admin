@@ -2,19 +2,20 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
+import categList from '../components/categListCom.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
-        href: '/dashboard',
+        title: 'Category',
+        href: '/category',
     },
 ];
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Category" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-
+        <categList />
     </AppLayout>
 </template>

@@ -1,0 +1,186 @@
+<template>
+    <div class="max-w-10xl px-4 sm:px-6 lg:px-8 py-8">
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800 transition-all duration-300">
+        <!-- User List Header -->
+        <div class="bg-gradient-to-r from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 px-6 py-4 sm:px-8"> 
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-white tracking-tight flex items-center">
+              <svg class="w-6 h-6 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              User List
+            </h2>
+
+          </div>
+        </div>
+              
+        <div class="p-4 sm:p-6">
+          <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div v-if="loadingUsers" class="p-8 text-center text-gray-500 dark:text-gray-400 flex items-center justify-center space-x-2">
+              <svg class="animate-spin h-5 w-5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> 
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Loading users...</span>
+            </div>
+            <div v-else-if="usersError" class="p-6 text-center text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
+              {{ usersError }}
+            </div>
+            <div v-else-if="users.length === 0" class="p-6 text-center text-gray-500 dark:text-gray-400">
+              No users found.
+            </div>
+            <div v-else class="overflow-x-auto custom-scrollbar">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      Joined Date
+                    </th>
+                    <th scope="col" class="relative px-6 py-3">
+                      <span class="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10">
+                          <img v-if="user.profile_image_url" class="h-10 w-10 rounded-full object-cover" :src="user.profile_image_url" :alt="user.name + ' profile image'">
+                          <span v-else class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-semibold">
+                            {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
+                          </span>
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.name || 'N/A' }}</div>
+                          <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{ user.num || user.id }}</div> 
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {{ user.email || 'N/A' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span :class="[
+                        'px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full capitalize',
+                        user.role === 'admin' ? 'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-300' : 
+                        user.role === 'editor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300' :
+                        'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300' // Default for other roles
+                      ]">
+                        {{ user.role || 'N/A' }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                      {{ formatDate(user.created_at) }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                      <button @click="openUserDetailModal(user.id)" type="button" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium">
+                        View
+                      </button>
+                      <button type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">
+                        Edit
+                      </button>
+                      <button  type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- User Detail Modal (Placeholder - You'll need to create/adapt this) -->
+      <!-- 
+      <UserDetailModal
+        :is-visible="showUserModal"
+        :user-id="selectedUserId"
+        @close="closeUserDetailModal"
+      /> 
+      -->
+    </div>
+  </template>
+  
+  <script setup>
+  import { ref, onMounted } from 'vue';
+  import axios from 'axios';
+  
+  // Assume `route` is globally available (e.g., from Ziggy)
+  // const route = (name, params) => `/api/mock/${name.replace('proxy.', '')}${params ? `?endpoint=${params.endpoint}` : '' }`;
+  
+  const users = ref([]);
+  const loadingUsers = ref(true);
+  const usersError = ref(null);
+  
+  // For User Detail Modal (if you implement it)
+  const showUserModal = ref(false);
+  const selectedUserId = ref(null);
+  
+  const fetchUsers = async () => {
+    loadingUsers.value = true;
+    usersError.value = null;
+    try {
+      // Using your specified endpoint for users
+      const response = await axios.get(route('proxy.get', { endpoint: 'users' }));
+      
+      if (response.data && response.data.status === true && response.data.data && Array.isArray(response.data.data.data)) {
+        users.value = response.data.data.data;
+      } else {
+        console.warn("Fetched users data is not in the expected format:", response.data);
+        usersError.value = "Unexpected data format for user list.";
+        users.value = [];
+      }
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      usersError.value = "Failed to load users. Please check the console for more details.";
+      if (err.response) {
+          usersError.value += ` (Status: ${err.response.status})`;
+      }
+      users.value = [];
+    } finally {
+      loadingUsers.value = false;
+    }
+  };
+  
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+          return 'Invalid Date';
+      }
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return 'Invalid Date';
+    }
+  };
+  
+  // Placeholder for opening a user detail modal
+  const openUserDetailModal = (userId) => {
+    selectedUserId.value = userId;
+    showUserModal.value = true; // You'd need a UserDetailModal component
+    console.log("View user:", userId);
+  };
+  
+  const closeUserDetailModal = () => {
+    showUserModal.value = false;
+    selectedUserId.value = null;
+  };
+  
+  
+  onMounted(() => {
+    fetchUsers();
+  });
+  </script>
