@@ -86,92 +86,6 @@
                 </ul>
               </div>
             </div>
-
-          <!-- Article List Section -->
-          <div class="attributes-section pt-8 border-t border-gray-200 dark:border-gray-800">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6 flex items-center">
-              <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-              </svg>
-              Article List
-            </h3>
-            
-            <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700">
-              <div v-if="loadingArticles" class="p-8 text-center text-gray-500 dark:text-gray-400 flex items-center justify-center space-x-2">
-                <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Loading articles...</span>
-              </div>
-              <div v-else-if="articlesError" class="p-6 text-center text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20">
-                {{ articlesError }}
-              </div>
-              <div v-else-if="articles.length === 0" class="p-6 text-center text-gray-500 dark:text-gray-400">
-                No articles found.
-              </div>
-              <div v-else class="overflow-x-auto custom-scrollbar">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead class="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
-                    <tr>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                        Author
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                        Published Date
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" class="relative px-6 py-3">
-                        <span class="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr v-for="article in articles" :key="article.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors duration-150">
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ article.title || 'N/A' }}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{ article.id }}</div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                        <!-- Updated to use author's pen_name or user's name -->
-                        {{ article.author?.pen_name || article.author?.user?.name || 'Unknown Author' }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                        {{ formatDate(article.published_at) }}
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <span :class="[
-                          'px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full capitalize',
-                          article.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300' : 
-                          article.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-300' :
-                          article.status === 'archived' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300' :
-                          'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-300'
-                        ]">
-                          {{ article.status || 'N/A' }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button @click="openArticleViewModal(article.id)" type="button" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium">
-                          View
-                        </button>
-                        <button type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">
-                          Edit
-                        </button>
-                        <button v-if="article.status !== 'published'" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
         </form>
       </div>
     </div>
@@ -189,75 +103,6 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import ArticleDetailModal from './articleDetailCom.vue'; 
-
-// ... (search states, modal states)
-const articles = ref([]);
-const loadingArticles = ref(true);
-const articlesError = ref(null);
-
-// Modal states
-const showArticleModal = ref(false);
-const selectedArticleId = ref(null);
-
-const openArticleViewModal = (articleId) => {
-  selectedArticleId.value = articleId;
-  showArticleModal.value = true;
-};
-
-const closeArticleViewModal = () => {
-  showArticleModal.value = false;
-  selectedArticleId.value = null;
-};
-
-
-const fetchArticles = async () => {
-  loadingArticles.value = true;
-  articlesError.value = null;
-  try {
-    // The endpoint 'articles' when passed to your proxy.get should return the paginated list.
-    const response = await axios.get(route('proxy.get', { endpoint: 'articles' }));
-
-    // Updated logic to access the articles array:
-    if (response.data && response.data.status === true && response.data.data && Array.isArray(response.data.data.data)) {
-      articles.value = response.data.data.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      // Fallback for slightly different paginated structures if status isn't present but data.data is the array
-      articles.value = response.data.data;
-    } else if (Array.isArray(response.data)) {
-      // Fallback for non-paginated, direct array response
-      articles.value = response.data;
-    }
-    else {
-      console.warn("Fetched articles data is not in the expected paginated format:", response.data);
-      articlesError.value = "Unexpected data format for article list. Expected response.data.data.data to be an array.";
-      articles.value = []; // Ensure articles is an array even on error
-    }
-
-  } catch (err) {
-    console.error("Error fetching articles:", err);
-    articlesError.value = "Failed to load articles. Please check the console for more details.";
-    if (err.response) {
-        articlesError.value += ` (Status: ${err.response.status})`;
-    }
-    articles.value = []; // Ensure articles is an array even on error
-  } finally {
-    loadingArticles.value = false;
-  }
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-        return 'Invalid Date';
-    }
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-  } catch (e) {
-    console.error("Error formatting date:", e);
-    return 'Invalid Date';
-  }
-};
 
 // Mock API call for Show/Season search (placeholder)
 const searchQuery = ref('');
@@ -283,6 +128,5 @@ const performSearch = async () => {
 
 
 onMounted(() => {
-  fetchArticles();
 });
 </script>
