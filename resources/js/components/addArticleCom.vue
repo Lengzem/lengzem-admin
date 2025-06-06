@@ -153,40 +153,45 @@
                     </div>
   
                     <!-- Status and Publish Time -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label for="articleStatus" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Status <span class="text-red-500">*</span>
-                        </label>
-                        <div class="mt-1 relative rounded-md shadow-sm">
-                          <select 
-                            id="articleStatus" 
-                            v-model="article.status"
-                            required
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100 py-2.5 px-3 border"
-                          >
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                            <option value="review">Needs Review</option>
-                            <option value="archived">Archived</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div>
-                        <label for="scheduledPublishTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Scheduled Publish Time
-                        </label>
-                        <div class="mt-1 relative rounded-md shadow-sm">
-                          <input 
-                            type="date" 
-                            id="scheduledPublishTime" 
-                            v-model="article.scheduled_publish_time"
-                            class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100 py-2.5 px-3 border"
-                          />
-                        </div>
-                      </div>
-                    </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div>
+                  <label for="articleStatus" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Status <span class="text-red-500">*</span>
+                  </label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <select 
+                      id="articleStatus" 
+                      v-model="article.status"
+                      required
+                      @change="handleStatusChange"
+                      class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100 py-2.5 px-3 border"
+                    >
+                      <option value="Draft">Draft</option>
+                      <option value="Published">Publish Now</option>
+                      <option value="Scheduled">Schedule</option>
+                    </select>
+                  </div>
+                </div>
 
+                <div v-if="article.status === 'Published' || article.status === 'Scheduled'">
+                  <label 
+                    for="publishOrScheduleTime" 
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    {{ article.status === 'Published' ? 'Publish At' : 'Schedule At' }}
+                    <span class="text-red-500">*</span>
+                  </label>
+                  <div class="mt-1 relative rounded-md shadow-sm">
+                    <input 
+                      type="date" 
+                      id="publishOrScheduleTime"
+                      v-model="dateTimeModel"
+                      class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100 py-2.5 px-3 border"
+                      required
+                    />
+                  </div>
+                </div>
+                </div>
                     <div class="pt-2">
                     <div class="relative flex items-start">
                       <div class="flex h-6 items-center">
@@ -305,154 +310,266 @@
   </template>
   
   <script setup>
+  import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
+  import { ref, watch, onUnmounted, nextTick, computed } from 'vue'; // Added computed
+  import axios from 'axios';
+  // Assuming Heroicons for icons, adjust if using a different library or SVGs
+  import { XMarkIcon, PlusIcon } from '@heroicons/vue/24/outline';
+  import { ExclamationCircleIcon } from '@heroicons/vue/24/solid'; // Or outline, depending on style
+  import { useToast } from 'vue-toastification';
 
-  import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { ref, watch, onUnmounted, nextTick } from 'vue';
-import axios from 'axios';
-
-const props = defineProps({
-  isVisible: {
-    type: Boolean,
-    required: true,
-  },
-});
-const emit = defineEmits(['close', 'article-added']);
-
-const modalPanelRef = ref(null);
-
-const initialArticleState = () => ({
-  title: '', summary: '', content: '', author_id: null, category_id: null,
-  status: 'draft', scheduled_publish_time: null, cover_image_url: '', tags: [],
-  isCommentable: false,
-});
-const article = ref(initialArticleState());
-const isSubmitting = ref(false);
-const submissionError = ref(null);
-
-const authors = ref([]); const loadingAuthors = ref(false); const authorsError = ref(null);
-const categories = ref([]); const loadingCategories = ref(false); const categoriesError = ref(null);
-const availableTags = ref([]); const loadingTags = ref(false); const tagsError = ref(null);
-
-const selectOptionText = (loading, error, count, type) => {
-  if (loading) return 'Loading...';
-  if (error) return `Error loading ${type}s`;
-  if (count === 0) return `No ${type}s available`;
-  return `Select ${type}`;
-};
-
-const fetchData = async (endpoint, dataRef, loadingRef, errorRef, nameField = 'name') => {
-  if (dataRef.value.length > 0 && !errorRef.value) return;
-  loadingRef.value = true; errorRef.value = null;
-  try {
-    const response = await axios.get(route('proxy.get'), { params: { endpoint } });
-    if (response.data?.status === true && Array.isArray(response.data.data?.data)) {
-      dataRef.value = response.data.data.data.map(item => ({
-        id: item.id,
-        name: item[nameField] || item.name || item.title || `Unnamed (ID: ${item.id})`,
-      }));
-    } else {
-      errorRef.value = `Failed to load ${endpoint}: Invalid data format.`;
+const toast = useToast();
+  
+  const props = defineProps({
+    isVisible: {
+      type: Boolean,
+      required: true,
+    },
+  });
+  const emit = defineEmits(['close', 'article-added']);
+  
+  const modalPanelRef = ref(null);
+  
+  const initialArticleState = () => ({
+    title: '', summary: '', content: '', author_id: null, category_id: null,
+    status: 'Draft',
+    scheduled_publish_time: null, published_at: null, cover_image_url: '', tags: [],
+    isCommentable: true,
+  });
+  const article = ref(initialArticleState());
+  const isSubmitting = ref(false);
+  const submissionError = ref(null);
+  
+  const authors = ref([]); const loadingAuthors = ref(false); const authorsError = ref(null);
+  const categories = ref([]); const loadingCategories = ref(false); const categoriesError = ref(null);
+  const availableTags = ref([]); const loadingTags = ref(false); const tagsError = ref(null);
+  
+  // Removed unused selectOptionText function
+  
+  const fetchData = async (endpoint, dataRef, loadingRef, errorRef, nameField = 'name') => {
+    // Conditional fetch only if data isn't already loaded or if there was a previous error
+    // if (dataRef.value.length > 0 && !errorRef.value) return; // This line can be kept or removed based on desired refresh behavior
+    loadingRef.value = true; errorRef.value = null;
+    try {
+      // Assuming `route()` is globally available (e.g., Ziggy in Laravel)
+      const response = await axios.get(route('proxy.get'), { params: { endpoint } });
+      if (response.data?.status === true && Array.isArray(response.data.data?.data)) {
+        dataRef.value = response.data.data.data.map(item => ({
+          id: item.id,
+          name: item[nameField] || item.name || item.title || `Unnamed (ID: ${item.id})`,
+        }));
+      } else {
+        errorRef.value = `Failed to load ${endpoint}: Invalid data format.`;
+        dataRef.value = [];
+      }
+    } catch (err) {
+      console.error(`Error fetching ${endpoint}:`, err);
+      errorRef.value = `Failed to load ${endpoint}. Please check console for details.`;
       dataRef.value = [];
+    } finally {
+      loadingRef.value = false;
     }
-  } catch (err) {
-    errorRef.value = `Failed to load ${endpoint}.`;
-    dataRef.value = [];
-  } finally {
-    loadingRef.value = false;
-  }
-};
-
-const closeModal = () => {
-  if (isSubmitting.value) return;
+  };
+  
+  const closeModal = () => {
+    if (isSubmitting.value) return;
+    submissionError.value = null;
+    emit('close');
+  };
+  
+  // Removed unused closeModalOnOverlay function
+  
+  const handleEscapeKey = (event) => {
+    if (event.key === 'Escape' && !isSubmitting.value) {
+      closeModal();
+    }
+  };
+  
+  const handleImageError = () => {
+    article.value.cover_image_url = '';
+  };
+  
+  const dateTimeModel = computed({
+    get() {
+      if (article.value.status === 'Published') {
+        return article.value.published_at;
+      } else if (article.value.status === 'Scheduled') {
+        return article.value.scheduled_publish_time;
+      }
+      return ''; // Default for other statuses or if null
+    },
+    set(newValue) {
+      if (article.value.status === 'Published') {
+        article.value.published_at = newValue;
+      } else if (article.value.status === 'Scheduled') {
+        article.value.scheduled_publish_time = newValue;
+      }
+    }
+  });
+  
+  const formatToDateTimeLocal = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    // Adjust for local timezone to ensure the input displays the correct local time
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+  
+  
+  const handleStatusChange = () => {
+    if (article.value.status === 'Published') {
+      if (!article.value.published_at) {
+        article.value.published_at = formatToDateTimeLocal(new Date());
+      }
+      article.value.scheduled_publish_time = null;
+    } else if (article.value.status === 'Scheduled') {
+      article.value.published_at = null;
+      if (!article.value.scheduled_publish_time) {
+        const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
+        article.value.scheduled_publish_time = formatToDateTimeLocal(oneHourFromNow);
+      }
+    } else { // Draft or other statuses
+      article.value.published_at = null;
+      article.value.scheduled_publish_time = null;
+    }
+  };
+  
+  const submitArticle = async () => {
+  isSubmitting.value = true;
   submissionError.value = null;
-  emit('close');
-};
 
-const closeModalOnOverlay = () => {
-  // Only close if not submitting, to prevent accidental close during API call
-  if (!isSubmitting.value) {
-    closeModal();
-  }
-}
+  const articleData = {
+    ...article.value,
+    published_at: article.value.status === 'Published' ? article.value.published_at : null,
+    scheduled_publish_time: article.value.status === 'Scheduled' ? article.value.scheduled_publish_time : null,
+  };
 
-const handleEscapeKey = (event) => {
-  if (event.key === 'Escape' && !isSubmitting.value) {
-    closeModal();
-  }
-};
+  if (articleData.author_id === '') articleData.author_id = null;
+  if (articleData.category_id === '') articleData.category_id = null;
 
-const handleImageError = () => { article.value.cover_image_url = ''; };
-
-const submitArticle = async () => {
-  isSubmitting.value = true; submissionError.value = null;
-  if (article.value.status !== 'scheduled') article.value.scheduled_publish_time = null;
-  const articleData = { ...article.value, scheduled_publish_time: article.value.scheduled_publish_time || null };
-  const bodydataForArticle = { ...articleData, params: { endpoint: 'articles' } };
   try {
-    const response = await axios.post(route('proxy.post'), bodydataForArticle);
-    emit('article-added', response.data?.data || { ...articleData, id: Date.now() });
+    const response = await axios.post(
+      route('proxy.post'),
+      articleData,
+      { params: { endpoint: 'articles' } }
+    );
+
+    const savedArticle = response.data?.data || { ...articleData, id: Date.now() };
+    emit('article-added', savedArticle);
     closeModal();
+
+    toast.success('Article submitted successfully!');
   } catch (error) {
+    console.error('Error submitting article:', error.response || error);
     const data = error.response?.data;
-    submissionError.value = data?.message || 'An unknown error occurred.';
+    submissionError.value = data?.message || data?.error || 'An unknown error occurred.';
+
     if (data?.errors) {
       const firstErrorKey = Object.keys(data.errors)[0];
-      if (firstErrorKey) submissionError.value += ` (${data.errors[firstErrorKey][0]})`;
+      if (firstErrorKey) {
+        submissionError.value += ` (${data.errors[firstErrorKey][0]})`;
+      }
     }
+
+    toast.error(submissionError.value);
   } finally {
     isSubmitting.value = false;
   }
 };
-
-let originalBodyOverflow = '';
-let firstFocusableElement = null;
-let lastFocusableElement = null;
-
-const focusTrap = (event) => {
-  if (event.key !== 'Tab') return;
-  if (event.shiftKey) {
-    if (document.activeElement === firstFocusableElement) {
-      lastFocusableElement.focus(); event.preventDefault();
-    }
-  } else {
-    if (document.activeElement === lastFocusableElement) {
-      firstFocusableElement.focus(); event.preventDefault();
-    }
-  }
-};
-
-watch(() => props.isVisible, (newValue) => {
-  if (newValue) {
-    originalBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    fetchData('authors', authors, loadingAuthors, authorsError, 'pen_name');
-    fetchData('categories', categories, loadingCategories, categoriesError);
-    fetchData('tags', availableTags, loadingTags, tagsError);
-    document.addEventListener('keydown', handleEscapeKey);
-    nextTick(() => {
-      if (modalPanelRef.value) {
-        const focusable = modalPanelRef.value.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusable.length) {
-          firstFocusableElement = focusable[0];
-          lastFocusableElement = focusable[focusable.length - 1];
-          firstFocusableElement.focus();
-          modalPanelRef.value.addEventListener('keydown', focusTrap);
-        }
+  
+  let originalBodyOverflow = '';
+  let firstFocusableElement = null;
+  let lastFocusableElement = null;
+  
+  const focusTrap = (event) => {
+    if (event.key !== 'Tab' || !modalPanelRef.value) return;
+  
+    const focusable = Array.from(modalPanelRef.value.querySelectorAll(
+      'button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])'
+    )).filter(el => !el.disabled && el.offsetParent !== null); // Ensure elements are visible and enabled
+  
+  
+    if (focusable.length === 0) return;
+  
+    firstFocusableElement = focusable[0];
+    lastFocusableElement = focusable[focusable.length - 1];
+  
+    if (event.shiftKey) {
+      if (document.activeElement === firstFocusableElement) {
+        lastFocusableElement.focus();
+        event.preventDefault();
       }
-    });
-  } else {
-    document.body.style.overflow = originalBodyOverflow;
-    document.removeEventListener('keydown', handleEscapeKey);
-    if (modalPanelRef.value) modalPanelRef.value.removeEventListener('keydown', focusTrap);
-    firstFocusableElement = null; lastFocusableElement = null;
-    if (!isSubmitting.value) {
-      setTimeout(() => { article.value = initialArticleState(); submissionError.value = null; }, 300);
+    } else {
+      if (document.activeElement === lastFocusableElement) {
+        firstFocusableElement.focus();
+        event.preventDefault();
+      }
     }
-  }
-});
-onUnmounted(() => {
-  if (document.body.style.overflow === 'hidden') document.body.style.overflow = originalBodyOverflow;
-  document.removeEventListener('keydown', handleEscapeKey);
-  if (modalPanelRef.value) modalPanelRef.value.removeEventListener('keydown', focusTrap);
-});
-</script>
+  };
+  
+  watch(() => props.isVisible, (newValue) => {
+    if (newValue) {
+      originalBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+  
+      // Reset form state when opening, unless it's already clean (e.g. first open)
+      // or if you prefer to always reset:
+      article.value = initialArticleState();
+      submissionError.value = null;
+  
+      fetchData('authors', authors, loadingAuthors, authorsError, 'pen_name');
+      fetchData('categories', categories, loadingCategories, categoriesError);
+      fetchData('tags', availableTags, loadingTags, tagsError);
+  
+      document.addEventListener('keydown', handleEscapeKey);
+  
+      nextTick(() => {
+        if (modalPanelRef.value) {
+          // Simplified focusable elements query
+           const focusable = Array.from(modalPanelRef.value.querySelectorAll(
+            'button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])'
+          )).filter(el => !el.disabled && el.offsetParent !== null);
+  
+          if (focusable.length) {
+            firstFocusableElement = focusable[0];
+            // lastFocusableElement is now dynamically calculated in focusTrap
+            firstFocusableElement.focus();
+            modalPanelRef.value.addEventListener('keydown', focusTrap);
+          }
+        }
+      });
+      handleStatusChange(); // Initialize date fields based on default status
+    } else {
+      document.body.style.overflow = originalBodyOverflow;
+      document.removeEventListener('keydown', handleEscapeKey);
+      if (modalPanelRef.value) {
+        modalPanelRef.value.removeEventListener('keydown', focusTrap);
+      }
+      firstFocusableElement = null;
+      lastFocusableElement = null;
+      // Reset form state on close if not submitting, delay to allow animation
+      if (!isSubmitting.value) {
+        setTimeout(() => {
+          article.value = initialArticleState();
+          submissionError.value = null;
+          // Clear fetched data if you want it fresh each time, or keep it cached
+          // authors.value = []; categories.value = []; availableTags.value = [];
+        }, 300); // Corresponds to leave duration
+      }
+    }
+  });
+  
+  onUnmounted(() => {
+    if (document.body.style.overflow === 'hidden') {
+      document.body.style.overflow = originalBodyOverflow;
+    }
+    document.removeEventListener('keydown', handleEscapeKey);
+    if (modalPanelRef.value) {
+      modalPanelRef.value.removeEventListener('keydown', focusTrap);
+    }
+  });
+  </script>
