@@ -87,10 +87,11 @@ const submit = async () => {
     };
 
     // Conditionally choose POST or PUT based on whether it's a new profile or editing an existing one
-    const apiMethod = isEditMode.value ? 'put' : 'post'; // 'put' for updating, 'post' for creating
+    const apiMethod = isEditMode.value;
 
-    await axios[apiMethod](
-      route('proxy.' + apiMethod),
+    if (apiMethod) {
+      await axios.put(
+      route('proxy.put'),
       payload,
       {
         params: {
@@ -98,7 +99,17 @@ const submit = async () => {
         },
       }
     );
-
+    } else {
+      await axios.post(
+      route('proxy.post'),
+      payload,
+      {
+        params: {
+          endpoint: `users/${authStore.user.uid}`, // Use UID from the store
+        },
+      }
+    );
+    }
     toast.success(isEditMode.value ? 'Profile updated successfully!' : 'Profile created successfully!');
     router.visit('/dashboard');
   } catch (error: any) {
