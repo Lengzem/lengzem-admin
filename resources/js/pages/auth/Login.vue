@@ -114,6 +114,7 @@ const verifyOtpAndLogin = async () => {
         });
 
         const profileData = response.data.data;
+        console.log(profileData)
         if (!profileData.phone || !profileData.role) {
             // If the user has no name or role, redirect to the profile edit page
             toast.info('I profile siam zo phawt rawh.');
