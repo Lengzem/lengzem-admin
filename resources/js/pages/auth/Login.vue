@@ -114,7 +114,7 @@ const verifyOtpAndLogin = async () => {
         if (!user.displayName) {
             // If the user has no display name, their profile is incomplete.
             toast.info('I profile siam zo phawt rawh.');
-            router.get(route('ProfileEdit'));
+            router.get(route('ProEdit'));
         } else {
             // Otherwise, their profile is complete. Go to the dashboard.
             const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
