@@ -127,11 +127,13 @@ const submit = async () => {
             id: user.uid,
             name: form.name,
             phone: user.phoneNumber,
-            email: '',
-            role: '',
-            bio: '',
-            profile_image_url: '',
+            email: null,
+            role: null,
+            bio: null,
+            profile_image_url: null,
         };
+
+        console.log('data:', payload);
 
         await axios.post(route('proxy.post'), payload, {
             params: {
@@ -140,7 +142,7 @@ const submit = async () => {
         });
 
         toast.success('Account siam a zo tawh e! Profile siam chhunzawm rawh.');
-        router.get(route('ProfileEdit'));
+        router.get(route('ProEdit'));
 
     } catch (error: any) {
         console.error('🔥 Registration Error:', error);
@@ -170,6 +172,7 @@ const submit = async () => {
 
 <template>
     <AuthBase title="Account Siamna" description="I hming leh phone number hmangin register rawh">
+
         <Head title="Register" />
         <div id="recaptcha-container"></div>
 
@@ -196,9 +199,11 @@ const submit = async () => {
             <div v-else class="grid gap-6">
                 <div class="grid gap-2">
                     <Label for="otp">OTP Code</Label>
-                    <p class="text-sm text-muted-foreground">OTP code i phone number <span class="font-semibold">{{ form.phone }}</span> a kan thawn kha ziak lut rawh.</p>
-                    <Input id="otp" type="text" inputmode="numeric" required v-model="form.otp" placeholder="_ _ _ _ _ _"
-                        autocomplete="one-time-code" maxlength="6" :disabled="form.processing" />
+                    <p class="text-sm text-muted-foreground">OTP code i phone number <span class="font-semibold">{{
+                form.phone }}</span> a kan thawn kha ziak lut rawh.</p>
+                    <Input id="otp" type="text" inputmode="numeric" required v-model="form.otp"
+                        placeholder="_ _ _ _ _ _" autocomplete="one-time-code" maxlength="6"
+                        :disabled="form.processing" />
                     <InputError :message="form.errors.otp" />
                 </div>
                 <Button @click="submit" type="button" class="mt-2 w-full" :disabled="form.processing">
@@ -213,7 +218,7 @@ const submit = async () => {
 
             <div class="text-center text-sm text-muted-foreground">
                 Account i neih tawh chuan?
-                <TextLink :href="route('login')" class="underline underline-offset-4">Login rawh</TextLink>
+                <TextLink :href="route('login') " class="underline underline-offset-4">Login rawh</TextLink>
             </div>
         </form>
 
