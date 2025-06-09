@@ -55,8 +55,7 @@ const fetchProfile = async () => {
     form.reset(); // Reset the form after pre-filling
 
   } catch (error) {
-    console.warn('Could not fetch existing user profile. A new one will be created.', error);
-    toast.error('Failed to load your profile data.');
+    isEditMode.value = false;
   }
 };
 
