@@ -121,6 +121,7 @@ const verifyOtpAndLogin = async () => {
                     // If the user has no name or role, redirect to the profile edit page
                     toast.info('I profile siam zo phawt rawh.');
                     router.get(route('ProEdit'));
+                    
                 } else {
                     // Otherwise, their profile is complete. Go to the dashboard.
                     const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
@@ -128,8 +129,8 @@ const verifyOtpAndLogin = async () => {
                 }
             })
             .catch((error) => {
-                console.error('🔥 Profile fetch error:', error);
-                toast.error('Could not fetch user profile. Please try again.');
+                    toast.info('I profile siam zo phawt rawh.');
+                    router.get(route('ProEdit'));
             });
         })
         .catch((error) => {
