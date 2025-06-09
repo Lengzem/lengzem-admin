@@ -12,10 +12,7 @@ import { useAuthStore } from '@/stores/authStore'; // 1. IMPORT THE AUTH STORE
 const toast = useToast();
 const authStore = useAuthStore(); // 2. INSTANTIATE THE STORE
 
-// We no longer need local refs for firebaseUid and firebaseToken
-// const firebaseUid = ref('');
-// const firebaseToken = ref('');
-
+// Form to manage input data
 const form = useForm({
   name: '',
   role: '',
@@ -23,28 +20,39 @@ const form = useForm({
   profile_image_url: '',
 });
 
-// --- REFACTORED: Fetch logic extracted and simplified ---
+let isEditMode = ref(false); // To track whether it's an edit mode or create mode
+
+// --- Fetch profile data from API ---
 const fetchProfile = async () => {
   if (!authStore.user) return; // Safety check
 
   try {
     // 3. SIMPLIFIED API CALL
-    // The Authorization header is now added AUTOMATICALLY by your authStore.
     const response = await axios.get(route('proxy.get'), {
         params: {
             endpoint: `users/${authStore.user.uid}`,
         },
-        // No 'headers' block is needed here anymore!
     });
 
     const profileData = response.data.data;
-    form.defaults({
+
+    // Check if the fetched profile data is empty, indicating a new profile creation
+    if (profileData && (profileData.name || profileData.role)) {
+      // Prefill form with fetched data
+      form.defaults({
         name: profileData.name || '',
         role: profileData.role || '',
         bio: profileData.bio || '',
         profile_image_url: profileData.profile_image_url || '',
-    });
-    form.reset();
+      });
+
+      isEditMode.value = true; // Set edit mode to true
+    } else {
+      // If profile data is empty, we're in create mode
+      isEditMode.value = false;
+    }
+    
+    form.reset(); // Reset the form after pre-filling
 
   } catch (error) {
     console.warn('Could not fetch existing user profile. A new one will be created.', error);
@@ -52,18 +60,14 @@ const fetchProfile = async () => {
   }
 };
 
-
-// --- REFACTORED: onMounted now uses the authStore ---
+// --- onMounted logic ---
 onMounted(async () => {
-  // Ensure the auth state is resolved from Firebase before we proceed.
-  // This is crucial if the user refreshes the page or navigates here directly.
   if (!authStore.user) {
     await authStore.initAuth();
   }
 
-  // After waiting for init, check again. If still no user, they must log in.
   if (authStore.user) {
-    // If the user is authenticated, fetch their profile to pre-fill the form.
+    // Fetch the user profile data after the auth is initialized
     await fetchProfile();
   } else {
     toast.error('You need to be logged in to edit your profile.');
@@ -71,9 +75,8 @@ onMounted(async () => {
   }
 });
 
-// --- REFACTORED: submit function now uses the authStore ---
+// --- Submit function for creating/updating profile ---
 const submit = async () => {
-  // 4. Use the store for the guard clause
   if (!authStore.user) {
     toast.error('User session not found. Please log in again.');
     return;
@@ -84,20 +87,20 @@ const submit = async () => {
       ...form.data(),
     };
 
-    // 5. SIMPLIFIED API CALL
-    // Use PUT for updating an existing resource. The auth header is added automatically.
-    await axios.put(
-      route('proxy.put'),
+    // Conditionally choose POST or PUT based on whether it's a new profile or editing an existing one
+    const apiMethod = isEditMode.value ? 'put' : 'post'; // 'put' for updating, 'post' for creating
+
+    await axios[apiMethod](
+      route('proxy.' + apiMethod),
       payload,
       {
         params: {
           endpoint: `users/${authStore.user.uid}`, // Use UID from the store
         },
-        // No 'headers' block is needed!
       }
     );
 
-    toast.success('Profile updated successfully!');
+    toast.success(isEditMode.value ? 'Profile updated successfully!' : 'Profile created successfully!');
     router.visit('/dashboard');
   } catch (error: any) {
     if (error.response && error.response.data && error.response.data.errors) {
@@ -106,12 +109,11 @@ const submit = async () => {
     } else {
         toast.error('An unexpected error occurred during the update.');
     }
-    console.error('Profile update error:', error);
+    console.error('Profile submit error:', error);
   }
 };
 </script>
 
-<!-- The template remains exactly the same. No changes needed. -->
 <template>
   <Head title="Edit Profile" />
   <div class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 animate-gradient">
@@ -151,7 +153,7 @@ const submit = async () => {
         </div>
 
         <Button type="submit" :disabled="form.processing" class="w-full py-3 text-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-pink-500 text-white font-semibold rounded-lg transition-transform transform hover:scale-105">
-            {{ form.processing ? 'Updating...' : 'Update Profile' }}
+            {{ form.processing ? 'Updating...' : isEditMode ? 'Update Profile' : 'Create Profile' }}
         </Button>
       </form>
     </div>

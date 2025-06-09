@@ -22,6 +22,5 @@ Route::post('/proxy', [ApiProxyController::class, 'proxyRequest'])->name('proxy.
 Route::get('/proxy', [ApiProxyController::class, 'proxyRequest'])->name('proxy.get');
 Route::get('/proxy', [ApiProxyController::class, 'proxyRequest'])->name('proxy.put');
 
-Route::get('/register', [RegisterController::class, 'showRegister'])->name('register');
 Route::get('/ProEdit', [RegisterController::class, 'showEdit'])->name('ProEdit');
 Route::get('/login', [LoginController::class, 'showLogin'])->name('login');

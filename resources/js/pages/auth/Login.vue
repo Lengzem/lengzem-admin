@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
-import {
-    signInWithPhoneNumber,
-    RecaptchaVerifier,
-    type ConfirmationResult
-} from 'firebase/auth';
+import { useForm, router, Head } from '@inertiajs/vue3';
+import { signInWithPhoneNumber, RecaptchaVerifier, type ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/firebase';
 import { useAuthStore } from '@/stores/authStore';
+import axios from 'axios';
 
 import AuthBase from '@/layouts/AuthLayout.vue';
 import InputError from '@/components/InputError.vue';
@@ -38,7 +35,7 @@ onMounted(() => {
 
 const setupRecaptcha = () => {
     if ((window as any).recaptchaVerifier) return;
-    
+
     (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'invisible',
         'expired-callback': () => {
@@ -60,7 +57,7 @@ const sendOtp = async () => {
     try {
         const appVerifier = (window as any).recaptchaVerifier;
         const result = await signInWithPhoneNumber(auth, form.phone, appVerifier);
-        
+
         confirmationResult.value = result;
         isOtpSent.value = true;
         toast.success(`OTP thawn a ni e ${form.phone}-ah`);
@@ -109,9 +106,16 @@ const verifyOtpAndLogin = async () => {
 
         toast.success('Login a tlang!', { timeout: 2000 });
 
-        // Step 2: Redirect based on the displayName property from Firebase Auth
-        if (!user.displayName) {
-            // If the user has no display name, their profile is incomplete.
+        // Step 2: Fetch user profile to check for name and role
+        const response = await axios.get(route('proxy.get'), {
+            params: {
+                endpoint: `users/${user.uid}`,
+            },
+        });
+
+        const profileData = response.data.data;
+        if (!profileData.phone || !profileData.role) {
+            // If the user has no name or role, redirect to the profile edit page
             toast.info('I profile siam zo phawt rawh.');
             router.get(route('ProEdit'));
         } else {
@@ -187,10 +191,6 @@ const verifyOtpAndLogin = async () => {
                 </button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
-                Account nei lo tan?
-                <TextLink :href="route('register')">Sign up</TextLink>
-            </div>
         </form>
 
         <div v-if="form.processing" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
