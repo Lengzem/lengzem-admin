@@ -91,67 +91,69 @@ const verifyOtpAndLogin = async () => {
         toast.error("Tihsual a awm. Bul atangin tan leh rawh.");
         return;
     }
+
     if (form.otp.length !== 6) {
         form.setError('otp', 'OTP hi character 6 a ni tur a ni.');
         toast.error('OTP kim chang ziak rawh.');
         return;
     }
+
     form.clearErrors();
     form.processing = true;
 
-    try {
-        // Step 1: Confirm the OTP with Firebase
-        const userCredential = await confirmationResult.value.confirm(form.otp);
-        const user = userCredential.user;
+    // Step 1: Confirm the OTP with Firebase
+    confirmationResult.value.confirm(form.otp)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            toast.success('Login a tlang!', { timeout: 2000 });
 
-        toast.success('Login a tlang!', { timeout: 2000 });
+            // Step 2: Fetch user profile to check for name and role
+            axios.get(route('proxy.get'), {
+                params: {
+                    endpoint: `users/${user.uid}`,
+                },
+            })
+            .then((response) => {
+                const profileData = response.data.data;
+                console.log(profileData);
 
-        // Step 2: Fetch user profile to check for name and role
-        const response = await axios.get(route('proxy.get'), {
-            params: {
-                endpoint: `users/${user.uid}`,
-            },
-        });
+                if (!profileData.phone || !profileData.role) {
+                    // If the user has no name or role, redirect to the profile edit page
+                    toast.info('I profile siam zo phawt rawh.');
+                    router.get(route('ProEdit'));
+                } else {
+                    // Otherwise, their profile is complete. Go to the dashboard.
+                    const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+                    router.get(redirectTo);
+                }
+            })
+            .catch((error) => {
+                console.error('🔥 Profile fetch error:', error);
+                toast.error('Could not fetch user profile. Please try again.');
+            });
+        })
+        .catch((error) => {
+            console.error('🔥 OTP Confirmation Error:', error);
+            let errorMessage = 'Login fuh lo. Ti tha leh rawh.';
 
-        const profileData = response.data.data;
-        console.log(profileData)
-        if (!profileData.phone || !profileData.role) {
-            // If the user has no name or role, redirect to the profile edit page
-            toast.info('I profile siam zo phawt rawh.');
-            router.get(route('ProEdit'));
-        } else {
-            // Otherwise, their profile is complete. Go to the dashboard.
-            const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
-            router.get(redirectTo);
-        }
-
-    } catch (error: any) {
-        console.error('🔥 Login error:', error);
-        let errorMessage = 'Login fuh lo. Ti tha leh rawh.';
-
-        if (error.code) { // Firebase errors
-            switch (error.code) {
-                case 'auth/invalid-verification-code':
-                    errorMessage = 'I OTP ziahluh a dik lo.';
-                    form.setError('otp', errorMessage);
-                    break;
-                case 'auth/code-expired':
-                    errorMessage = 'OTP a thi. A thar lam leh rawh.';
-                    isOtpSent.value = false; // Go back to step 1
-                    break;
-                case 'auth/user-not-found':
-                    errorMessage = 'I phone number a awm lo. Siam tha leh rawh.';
-                    toast.error(errorMessage);
-                    // Redirect to the registration page if user is not found
-                    router.get(route('register'));
-                    break;
+            if (error.code) { // Firebase errors
+                switch (error.code) {
+                    case 'auth/invalid-verification-code':
+                        errorMessage = 'I OTP ziahluh a dik lo.';
+                        form.setError('otp', errorMessage);
+                        break;
+                    case 'auth/code-expired':
+                        errorMessage = 'OTP a thi. A thar lam leh rawh.';
+                        isOtpSent.value = false; // Go back to step 1
+                        break;
+                }
             }
-        }
 
-        toast.error(errorMessage);
-    } finally {
-        form.processing = false;
-    }
+            toast.error(errorMessage);
+        })
+        .finally(() => {
+            form.processing = false;
+        });
 };
 </script>
 
