@@ -31,6 +31,7 @@ const form = useForm({
     name: '',
     phone: '',
     otp: '',
+    role: '',
 });
 
 const setupRecaptcha = () => {
@@ -127,8 +128,8 @@ const submit = async () => {
             id: user.uid,
             name: form.name,
             phone: user.phoneNumber,
+            role: form.role || null,
             email: null,
-            role: null,
             bio: null,
             profile_image_url: null,
         };
@@ -185,6 +186,17 @@ const submit = async () => {
                     <InputError :message="form.errors.name" />
                 </div>
                 <div class="grid gap-2">
+                    <Label for="role">Role</Label>
+                    <select id="role" v-model="form.role" :disabled="form.processing"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white">
+                        <option value="" disabled>Select a role</option>
+                        <option value="author">Author</option>
+                        <option value="writer">Writer</option>
+                        <option value="reader">Reader</option>
+                    </select>
+                    <InputError :message="form.errors.role" />
+                </div>
+                <div class="grid gap-2">
                     <Label for="phone">Phone Number</Label>
                     <Input id="phone" type="tel" required v-model="form.phone" placeholder="+919876543210"
                         autocomplete="tel" :disabled="form.processing" />
@@ -218,7 +230,7 @@ const submit = async () => {
 
             <div class="text-center text-sm text-muted-foreground">
                 Account i neih tawh chuan?
-                <TextLink :href="route('login') " class="underline underline-offset-4">Login rawh</TextLink>
+                <TextLink :href="route('login')" class="underline underline-offset-4">Login rawh</TextLink>
             </div>
         </form>
 
