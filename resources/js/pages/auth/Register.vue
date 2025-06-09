@@ -55,6 +55,7 @@ const sendOtp = async () => {
         toast.error('I hming ziak phawt rawh.');
         return;
     }
+
     if (!form.phone || !/^\+[1-9]\d{1,14}$/.test(form.phone)) {
         form.setError('phone', 'Phone number dik tak ziak rawh (e.g., +919876543210).');
         toast.error('Phone number format a dik lo. Ram code telh rawh.');
@@ -73,6 +74,7 @@ const sendOtp = async () => {
     } catch (error: any) {
         console.error('🔥 OTP Send Error:', error);
         let errorMessage = 'OTP thawn a kal tluang lo. Ti tha leh rawh.';
+        
         if (error.code) {
             switch (error.code) {
                 case 'auth/invalid-phone-number':
@@ -85,8 +87,15 @@ const sendOtp = async () => {
                 case 'auth/network-request-failed':
                     errorMessage = 'Network chhia. Check phawt rawh.';
                     break;
+                case 'auth/phone-number-already-exists':
+                    errorMessage = 'I phone number hi Register a ni tawh. Login rawh.';
+                    break;
+                default:
+                    errorMessage = 'OTP thawn a kal tluang lo. Ti tha leh rawh.';
+                    break;
             }
         }
+        
         toast.error(errorMessage);
     } finally {
         form.processing = false;
@@ -190,8 +199,8 @@ const submit = async () => {
                     <select id="role" v-model="form.role" :disabled="form.processing"
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-white">
                         <option value="" disabled>Select a role</option>
-                        <option value="author">Author</option>
-                        <option value="writer">Writer</option>
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
                         <option value="reader">Reader</option>
                     </select>
                     <InputError :message="form.errors.role" />
