@@ -88,6 +88,7 @@ const submit = async () => {
 
     // Conditionally choose POST or PUT based on whether it's a new profile or editing an existing one
     const apiMethod = isEditMode.value;
+    console.log(apiMethod)
 
     if (apiMethod) {
       await axios.put(
@@ -100,12 +101,11 @@ const submit = async () => {
       }
     );
     } else {
-      await axios.post(
-      route('proxy.post'),
+      await axios.post(route('proxy.post'),
       payload,
       {
         params: {
-          endpoint: `users/${authStore.user.uid}`, // Use UID from the store
+          endpoint: 'users', // Use UID from the store
         },
       }
     );
