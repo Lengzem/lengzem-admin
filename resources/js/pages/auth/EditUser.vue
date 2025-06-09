@@ -37,7 +37,7 @@ const fetchProfile = async () => {
         // No 'headers' block is needed here anymore!
     });
 
-    const profileData = response.data;
+    const profileData = response.data.data;
     form.defaults({
         name: profileData.name || '',
         role: profileData.role || '',
