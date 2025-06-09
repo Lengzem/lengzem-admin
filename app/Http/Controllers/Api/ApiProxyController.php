@@ -21,7 +21,7 @@ class ApiProxyController extends Controller
         }
 
         // Build the full backend API URL
-        $apiUrl = "http://192.168.1.40:8000/api/{$endpoint}";
+        $apiUrl = "https://api.lengzem.in/api/{$endpoint}";
         $apiKey = '12345qwerty';
 
         // --- START OF MODIFICATION ---
