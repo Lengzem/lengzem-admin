@@ -8,7 +8,6 @@ import {
     type ConfirmationResult
 } from 'firebase/auth';
 import { auth } from '@/firebase';
-// NO axios import needed anymore
 import { useAuthStore } from '@/stores/authStore';
 
 import AuthBase from '@/layouts/AuthLayout.vue';
@@ -89,7 +88,7 @@ const sendOtp = async () => {
     }
 };
 
-// --- SIMPLIFIED: Verify OTP and redirect based on Firebase data ONLY ---
+// Verify OTP and redirect to registration if not registered
 const verifyOtpAndLogin = async () => {
     if (!confirmationResult.value) {
         toast.error("Tihsual a awm. Bul atangin tan leh rawh.");
@@ -109,7 +108,7 @@ const verifyOtpAndLogin = async () => {
         const user = userCredential.user;
 
         toast.success('Login a tlang!', { timeout: 2000 });
-        
+
         // Step 2: Redirect based on the displayName property from Firebase Auth
         if (!user.displayName) {
             // If the user has no display name, their profile is incomplete.
@@ -124,7 +123,7 @@ const verifyOtpAndLogin = async () => {
     } catch (error: any) {
         console.error('🔥 Login error:', error);
         let errorMessage = 'Login fuh lo. Ti tha leh rawh.';
-        
+
         if (error.code) { // Firebase errors
             switch (error.code) {
                 case 'auth/invalid-verification-code':
@@ -134,6 +133,12 @@ const verifyOtpAndLogin = async () => {
                 case 'auth/code-expired':
                     errorMessage = 'OTP a thi. A thar lam leh rawh.';
                     isOtpSent.value = false; // Go back to step 1
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage = 'I phone number a awm lo. Siam tha leh rawh.';
+                    toast.error(errorMessage);
+                    // Redirect to the registration page if user is not found
+                    router.get(route('register'));
                     break;
             }
         }
@@ -146,7 +151,6 @@ const verifyOtpAndLogin = async () => {
 </script>
 
 <template>
-    <!-- The template remains exactly the same as the previous version -->
     <AuthBase title="Login rawh" description="I phone number hmangin lut rawh">
         <Head title="Log in" />
 
