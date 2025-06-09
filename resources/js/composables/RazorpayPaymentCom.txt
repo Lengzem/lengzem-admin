@@ -1,0 +1,211 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
+
+const selectedAmount = ref(100);
+const showModal = ref(false);
+const selectedPlan = ref<{ name: string; price: number } | null>(null);
+const lastOrder = ref<null | { order_id: string; plan: { name: string; price: number } }>(null);
+
+const showRetryModal = ref(false);
+const pendingPlan = ref<{ name: string; price: number } | null>(null);
+
+const firebaseUID = localStorage.getItem('firebase_uid') || null;
+
+const plans = ref([
+  { id: 1, name: "1 Week", duration: "7 Days", price: 99 },
+  { id: 2, name: "1 Month", duration: "30 Days", price: 299 },
+  { id: 3, name: "4 Months", duration: "120 Days", price: 999 },
+  { id: 4, name: "6 Months", duration: "180 Days", price: 1499 },
+  { id: 5, name: "1 Year", duration: "365 Days", price: 2499 },
+]);
+
+const checkAndSelectPlan = async (plan: { name: string; price: number }) => {
+  selectedPlan.value = plan;
+
+  try {
+    const { data } = await axios.get(`/subscribe/subscription-validity/${firebaseUID}`);
+    if (data.is_active) {
+      showModal.value = true;
+      toast.warning("You already have an active subscription");
+    } else {
+      proceedToPayment(plan);
+    }
+  } catch (error) {
+    proceedToPayment(plan);
+  }
+};
+
+const proceedToPayment = async (plan: { name: string; price: number }) => {
+  selectedAmount.value = plan.price;
+  const amountInPaise = plan.price * 100;
+
+  try {
+    const { data } = await axios.post('/subscribe/razorpay/order', {
+      amount: plan.price,
+      firebase_uid: firebaseUID,
+      plan_name: plan.name,
+    });
+
+    lastOrder.value = {
+      order_id: data.order_id,
+      plan
+    };
+
+    openRazorpayPayment(data.order_id, plan);
+  } catch (error) {
+    toast.error("❌ Failed to initiate payment");
+    console.error(error);
+  }
+};
+
+const openRazorpayPayment = (order_id: string, plan: { name: string; price: number }) => {
+  const amountInPaise = plan.price * 100;
+
+  const options = {
+    key: import.meta.env.VITE_RAZORPAY_KEY,
+    amount: amountInPaise,
+    currency: "INR",
+    name: "ZoStream",
+    description: `${plan.name} Subscription`,
+    order_id: order_id, // ⚠️ MUST be set!
+    handler: async (response: any) => {
+
+  if (!response.razorpay_order_id || !response.razorpay_signature || !response.razorpay_payment_id) {
+    toast.error("⚠️ Incomplete Razorpay response");
+    return;
+  }
+
+  try {
+    const verifyRes = await axios.post('/subscribe/razorpay/verify', {
+      order_id: response.razorpay_order_id,
+      payment_id: response.razorpay_payment_id,
+      signature: response.razorpay_signature,
+      amount: plan.price,
+      firebase_uid: firebaseUID,
+    });
+    toast.success(`✅ ${verifyRes.data.message}`);
+    lastOrder.value = null;
+  } catch (e) {
+    toast.error("❌ Payment verification failed");
+  }
+},
+
+    modal: {
+      ondismiss: async () => {
+        toast.warning("Payment was cancelled.");
+        await axios.post('/subscribe/razorpay/abandon', { order_id });
+      },
+    },
+    theme: { color: "#F37254" },
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+};
+
+const retryPayment = () => {
+  if (lastOrder.value) {
+    openRazorpayPayment(lastOrder.value.order_id, lastOrder.value.plan);
+  }
+};
+
+const cancelPending = async () => {
+  if (!lastOrder.value) return;
+
+  try {
+    await axios.post('/subscribe/razorpay/abandon', {
+      order_id: lastOrder.value.order_id,
+    });
+    toast.info("Pending order cancelled.");
+  } catch (error) {
+    console.error("Failed to cancel pending order", error);
+  } finally {
+    showRetryModal.value = false;
+    pendingPlan.value = null;
+    lastOrder.value = null;
+  }
+};
+
+const cancelSubscriptionAttempt = () => {
+  showModal.value = false;
+  selectedPlan.value = null;
+};
+
+const confirmProceed = () => {
+  if (selectedPlan.value) {
+    showModal.value = false;
+    proceedToPayment(selectedPlan.value);
+  }
+};
+
+onMounted(async () => {
+  if (!firebaseUID) return;
+
+  try {
+    const { data } = await axios.get(`/subscribe/razorpay/last-order/${firebaseUID}`);
+    if (data?.order?.razorpay_order_id && data?.order?.plan) {
+      lastOrder.value = {
+        order_id: data.order.razorpay_order_id,
+        plan: data.order.plan
+      };
+      pendingPlan.value = data.order.plan;
+      showRetryModal.value = true;
+    }
+  } catch (e) {
+    console.log("No abandoned order found.");
+  }
+});
+</script>
+
+<template>
+  <div class="flex flex-col items-center p-6 bg-black-900 min-h-screen mt-16">
+    <h1 class="text-white text-2xl font-bold mb-6">Choose a Subscription Plan</h1>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">You already have an active subscription</h2>
+        <p class="text-gray-600 mb-6">Do you want to extend your current subscription?</p>
+        <div class="flex justify-center gap-4">
+          <button @click="cancelSubscriptionAttempt" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+          <button @click="confirmProceed" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subscription Plans -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        v-for="plan in plans"
+        :key="plan.id"
+        class="bg-gray-800 text-white p-6 rounded-lg shadow-lg hover:scale-105 transition"
+        @click="checkAndSelectPlan(plan)"
+      >
+        <h2 class="text-xl font-semibold">{{ plan.name }}</h2>
+        <p class="text-gray-400">{{ plan.duration }}</p>
+        <p class="text-lg font-bold mt-2">₹{{ plan.price }}</p>
+        <button class="mt-4 bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+          Pay ₹{{ plan.price }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Retry Modal -->
+    <div v-if="showRetryModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg w-[90%] max-w-md">
+        <h2 class="text-xl font-bold mb-2">Pending Payment</h2>
+        <p class="mb-4 text-sm text-gray-700 dark:text-gray-300">
+          You have an unfinished payment for <strong>{{ pendingPlan?.name }}</strong> plan (₹{{ pendingPlan?.price }}). Would you like to continue?
+        </p>
+        <div class="flex justify-end gap-2">
+          <button @click="cancelPending" class="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-md text-sm">Cancel</button>
+          <button @click="retryPayment" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm">Continue Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
