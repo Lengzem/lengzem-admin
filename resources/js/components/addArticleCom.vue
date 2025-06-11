@@ -263,16 +263,30 @@ const categories = ref([]);
 
 // --- TAGS STATE AND LOGIC ---
 const availableTags = ref([]);
-const tagCache = ref({}); // Cache to store {id, name} objects for all seen tags
+const tagCache = ref({});
 const loadingTags = ref(false);
 const tagsError = ref(null);
 const tagSearchQuery = ref('');
 let debounceTimeout = null;
 
+// Helper function to format JS Date to MySQL DATETIME string
+const formatDateForMySQL = (date) => {
+  if (!date || !(date instanceof Date)) return null;
+  const pad = (num) => num.toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
+
 const selectedTags = computed(() => {
   return article.value.tags
     .map(tagId => tagCache.value[tagId])
-    .filter(Boolean); // Filter out any null/undefined if a tag isn't in the cache yet
+    .filter(Boolean);
 });
 
 const filteredAvailableTags = computed(() => {
@@ -311,21 +325,17 @@ const fetchData = async (endpoint, dataRef, loadingRef, errorRef, nameField = 'n
 const searchTags = async (query) => {
   loadingTags.value = true;
   tagsError.value = null;
-
   const endpoint = query ? 'tags/search' : 'tags';
   const params = { endpoint };
   if (query) {
     params.name = query;
   }
-
   try {
     const response = await axios.get(route('proxy.get'), { params });
     const dataList = response.data?.data?.data || response.data?.data || [];
-
     if (response.data?.status === true && Array.isArray(dataList)) {
       const newTags = dataList.map(item => ({ id: item.id, name: item.name }));
       availableTags.value = newTags;
-      // Populate the cache with the fetched tags
       newTags.forEach(tag => {
         if (!tagCache.value[tag.id]) {
           tagCache.value[tag.id] = tag;
@@ -348,7 +358,7 @@ watch(tagSearchQuery, (newQuery) => {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(() => {
     searchTags(newQuery);
-  }, 300); // 300ms delay
+  }, 300);
 });
 
 const submitArticle = async () => {
@@ -356,16 +366,34 @@ const submitArticle = async () => {
   submissionError.value = null;
 
   try {
+    // Create a deep copy to avoid mutating reactive state directly
+    const payload = JSON.parse(JSON.stringify(article.value));
+
+    // Format dates for MySQL if they exist
+    if (payload.published_at) {
+      payload.published_at = formatDateForMySQL(new Date(payload.published_at));
+    }
+    if (payload.scheduled_publish_time) {
+      payload.scheduled_publish_time = formatDateForMySQL(new Date(payload.scheduled_publish_time));
+    }
+
+    // --- CONSOLE LOGGING THE FINAL PAYLOAD ---
+    console.log("--- Submitting Article Data ---");
+    console.log("Payload being sent:", payload);
+    console.log("-------------------------------");
+    // --- END CONSOLE LOGGING ---
+
     const response = await axios.post(
       route('proxy.post'),
-      article.value,
+      payload, // Send the formatted payload
       { params: { endpoint: 'articles' } }
     );
 
     toast.success('Article submitted successfully!');
-    // Potentially close modal or redirect here
   } catch (error) {
     console.error('Error submitting article:', error.response || error);
+    // Log the payload that caused the error
+    console.error('Data that caused the error:', error.config?.data);
     const data = error.response?.data;
     submissionError.value = data?.message || data?.error || 'An unknown error occurred.';
     toast.error(submissionError.value);
@@ -400,7 +428,6 @@ const dateTimeModel = computed({
     } else if (article.value.status === 'Scheduled') {
       date = article.value.scheduled_publish_time;
     }
-    // Format date to YYYY-MM-DD for the input[type=date]
     return date ? new Date(date).toISOString().split('T')[0] : '';
   },
   set(newValue) {
@@ -416,20 +443,18 @@ const dateTimeModel = computed({
 
 const wordCount = computed(() => {
     if (!article.value.content) return 0;
-    // This regex is a simple approximation
-    const text = article.value.content.replace(/<[^>]+>/g, ''); // strip html tags
+    const text = article.value.content.replace(/<[^>]+>/g, '');
     const matches = text.match(/[\w\d\'-]+/gi);
     return matches ? matches.length : 0;
 });
 
-// Assume closeModal is an emit or a router push, to be implemented by parent
 const closeModal = () => {
   console.log('Cancel button clicked. Implement navigation or modal close logic.');
-  // Example: router.back(); or emit('close');
 };
 
 // Initial data fetch
 fetchData('authors', authors, ref(false), ref(null), 'pen_name');
 fetchData('categories', categories, ref(false), ref(null));
-searchTags(''); // Initial fetch for all tags
+searchTags('');
+
 </script>

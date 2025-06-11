@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import userList from '../components/userListCom.vue';
+import userSearch from '@/components/userSearchCom.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -27,6 +28,7 @@ onMounted(() => {
     <Head title="User" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
+      <userSearch />
         <userList />
     </AppLayout>
 </template>

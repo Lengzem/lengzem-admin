@@ -2,7 +2,7 @@
   <div class="max-w-10xl px-4 sm:px-6 lg:px-8 py-8">
     <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800 transition-all duration-300">
       <!-- Component Header -->
-      <div class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 px-6 py-4 sm:px-8">
+      <div class="bg-gradient-to-r from-amber-500 to-orange-600 dark:from-amber-600 dark:to-orange-700 px-6 py-4 sm:px-8">
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-white tracking-tight flex items-center">
             <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 8v5z"></path></svg>
@@ -21,7 +21,7 @@
           <button
             type="button"
             @click="toggleSearchInput"
-            class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+            class="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
             :class="{ 'ring-2 ring-offset-2 ring-blue-400 dark:ring-blue-300': showSearchInput }"
           >
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -176,11 +176,11 @@ const performSearch = async () => {
       // **MODIFIED LINE**: Using the consistent proxy API call
       const response = await axios.get(route('proxy.get'), {
           params: {
-              endpoint: 'tags/search',
+              endpoint: `tags/search`,
               name: query
           }
       });
-      searchResults.value = response.data.data || [];
+      searchResults.value = response.data.data.data || [];
   } catch (error) {
       console.error("Error searching for tags:", error);
       searchResults.value = [];

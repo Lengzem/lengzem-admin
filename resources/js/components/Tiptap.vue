@@ -1,23 +1,16 @@
 <script setup>
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
-import Blockquote from '@tiptap/extension-blockquote'
-import CodeBlock from '@tiptap/extension-code-block'
+// --- Only import extensions NOT in StarterKit ---
 import { Color } from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
-import Heading from '@tiptap/extension-heading'
 import TextAlign from '@tiptap/extension-text-align'
-import BulletList from '@tiptap/extension-bullet-list'
-import OrderedList from '@tiptap/extension-ordered-list'
-import Text from '@tiptap/extension-text'
-import Paragraph from '@tiptap/extension-paragraph'
-import Document from '@tiptap/extension-document'
-import ListItem from '@tiptap/extension-list-item'
 import { watch } from 'vue'
-// Import all the necessary icons
+
+// Import all the necessary icons (this part is correct)
 import FormatBold from 'vue-material-design-icons/FormatBold.vue'
 import FormatItalic from 'vue-material-design-icons/FormatItalic.vue'
 import FormatUnderline from 'vue-material-design-icons/FormatUnderline.vue'
@@ -29,8 +22,7 @@ import FormatParagraph from 'vue-material-design-icons/FormatParagraph.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import FormatListNumbered from 'vue-material-design-icons/FormatListNumbered.vue'
 import FormatQuoteClose from 'vue-material-design-icons/FormatQuoteClose.vue'
-import CodeBraces from 'vue-material-design-icons/CodeBraces.vue' // For inline code
-import CodeTags from 'vue-material-design-icons/CodeTags.vue'     // For code blocks
+import CodeTags from 'vue-material-design-icons/CodeTags.vue'
 import Minus from 'vue-material-design-icons/Minus.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import ImagePlus from 'vue-material-design-icons/ImagePlus.vue'
@@ -52,26 +44,18 @@ const editor = useEditor({
     emit('update:modelValue', editor.getHTML())
   },
   extensions: [
+    // Use StarterKit as the base and configure it
     StarterKit.configure({
+      // Heading, BulletList, OrderedList, etc., are all configured here
       heading: {
         levels: [1, 2, 3],
       },
     }),
-    BulletList,
-    OrderedList,
-    Blockquote,
-    CodeBlock,
-    Paragraph,
-    ListItem,
-    Document,
-    Text,
+    // Now, add the extensions that are NOT part of StarterKit
     TextStyle,
     Color,
     Underline,
     Image,
-    Heading.configure({
-      levels: [1, 2, 3],
-    }),
     TextAlign.configure({
       types: ['heading', 'paragraph'],
     }),
@@ -82,16 +66,18 @@ const editor = useEditor({
   ],
   editorProps: {
     attributes: {
-      class: 'border border-gray-400 p-4 min-h-[40rem] max-h-[50rem] overflow-y-auto outline-none prose max-w-none',
+      // Small UI improvement: remove top border to merge with toolbar, add dark mode prose
+      class: 'border-t-0 p-4 min-h-[40rem] max-h-[50rem] overflow-y-auto outline-none prose dark:prose-invert max-w-none focus:outline-none',
     },
   },
 })
 
 // Watch for changes in the v-model and update the editor content accordingly
 watch(() => props.modelValue, (newValue) => {
-  const isSame = editor.value.getHTML() === newValue
-  if (isSame) return
-  editor.value.commands.setContent(newValue, false)
+  if (editor.value && editor.value.getHTML() === newValue) {
+    return
+  }
+  editor.value?.commands.setContent(newValue, false)
 })
 
 // --- Logic for Links and Images ---
@@ -103,14 +89,15 @@ const setLink = () => {
     editor.value.chain().focus().extendMarkRange('link').unsetLink().run()
     return
   }
-  const title = window.prompt('Link Title', '')
-  editor.value.chain().focus().extendMarkRange('link').setLink({ href: url, title }).run()
+  editor.value.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
 }
 
 const addImage = () => {
-  const url = window.prompt('Image URL')
+  const url = window.prompt('Image URL');
   if (url) {
-    editor.value.chain().focus().setImage({ src: url }).run()
+    // Create image HTML with inline CSS
+    const imgHtml = `<img src="${url}" style="width: 100%; max-width: 100%; height: auto; object-fit: contain;" />`;
+    editor.value.chain().focus().insertContent(imgHtml).run();
   }
 }
 

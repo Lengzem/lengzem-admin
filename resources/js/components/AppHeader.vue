@@ -354,7 +354,6 @@ function closeSheet() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" class="w-48">
                                     <SidebarMenuButton as="a" :href="route('login')">Login</SidebarMenuButton>
-                                    <SidebarMenuButton as="a" :href="route('register')">Register</SidebarMenuButton>
                                 </DropdownMenuContent>
                             </template>
                         </DropdownMenu>

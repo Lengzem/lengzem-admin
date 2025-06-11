@@ -2,7 +2,7 @@
     <div class="max-w-10xl px-4 sm:px-6 lg:px-8 py-8">
       <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800 transition-all duration-300">
         <!-- Component Header -->
-        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 px-6 py-4 sm:px-8">
+        <div class="bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 px-6 py-4 sm:px-8">
           <div class="flex items-center justify-between">
             <h2 class="text-2xl font-bold text-white tracking-tight flex items-center">
               <svg class="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
