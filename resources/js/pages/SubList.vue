@@ -4,13 +4,13 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import categList from '../components/categListCom.vue';
-import categSearch from '@/components/categSearchCom.vue';
+import subList from '../components/subListCom.vue';
+import subUserList from '@/components/subUserListCom.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Category',
-        href: '/category',
+        title: 'Subscription',
+        href: '/subscription',
     },
 ];
 
@@ -26,10 +26,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="Category" />
+    <Head title="Subscription" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <categSearch />
-        <categList />
+        <subList />
+        <subUserList />
     </AppLayout>
 </template>

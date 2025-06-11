@@ -15,3 +15,4 @@ Route::get('tag', fn () => Inertia::render('Tag'))->name('tag');
 Route::get('author', fn () => Inertia::render('Authors'))->name('author');
 Route::get('article', fn () => Inertia::render('Article'))->name('article');
 Route::get('article/add', fn () => Inertia::render('AddArticle'))->name('articalAdd');
+Route::get('subscription', fn () => Inertia::render('SubList'))->name('subscription');
