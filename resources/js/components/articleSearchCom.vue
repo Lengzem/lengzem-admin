@@ -31,16 +31,16 @@
             </svg>
             <span>{{ showSearchInput ? 'Hide Search' : 'Search Articles' }}</span>
           </button>
-          <button
-            type="button"
-            @click="openAddArticleModal"
-            class="w-full sm:w-auto px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Add New Article</span>
-          </button>
+          <Link
+  :href="route('articalAdd')"
+  as="button"
+  class="inline-flex items-center justify-center px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 space-x-2"
+>
+  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+  </svg>
+  <span>Add Article</span>
+</Link>
         </div>
 
         <!-- Search Input Section with Transition -->
@@ -138,20 +138,12 @@
       </div>
 
     </div>
-
-    <!-- Add Article Modal -->
-    <AddArticleModal 
-      :is-visible="showAddArticleModal" 
-      @close="closeAddArticleModal"
-      @article-added="handleArticleAdded"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, nextTick, watch } from 'vue';
-// import axios from 'axios'; // For actual API calls
-import AddArticleModal from './addArticleCom.vue'; // Adjust path if needed
+import { Link } from '@inertiajs/vue3'; 
 
 const showSearchInput = ref(false);
 const searchQuery = ref('');
@@ -218,10 +210,6 @@ watch(searchQuery, (newQuery) => {
     // searchPerformed.value = false; // Or keep true to show 'No results for ""'
   }
 });
-
-const openAddArticleModal = () => {
-  showAddArticleModal.value = true;
-};
 
 const closeAddArticleModal = () => {
   showAddArticleModal.value = false;

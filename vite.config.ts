@@ -5,6 +5,7 @@ import path from 'path';
 import tailwindcss from 'tailwindcss';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import vueJsx from '@vitejs/plugin-vue-jsx';
 
 export default defineConfig({
     plugins: [
@@ -21,6 +22,7 @@ export default defineConfig({
                 },
             },
         }),
+        vueJsx(),
     ],
     resolve: {
         alias: {

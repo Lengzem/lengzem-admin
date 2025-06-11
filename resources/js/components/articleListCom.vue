@@ -56,7 +56,7 @@
                         {{ article.author?.pen_name || article.author?.user?.name || 'Unknown Author' }}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                        {{ formatDate(article.published_at) }}
+                        {{ article.published_at }}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
                         <span :class="[
@@ -162,19 +162,6 @@ const fetchArticles = async () => {
     articles.value = [];
   } finally {
     loadingArticles.value = false;
-  }
-};
-
-const formatDate = (dateString) => {
-  // ... (this function is unchanged)
-  if (!dateString) return 'N/A';
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid Date';
-    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-  } catch (e) {
-    console.error("Error formatting date:", e);
-    return 'Invalid Date';
   }
 };
 

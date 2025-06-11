@@ -16,7 +16,6 @@ import { router } from '@inertiajs/vue3';
 import VueTelInput from 'vue-tel-input';
 import 'vue-tel-input/vue-tel-input.css';
 import PrimeVue from 'primevue/config';
-import '../css/shaka-custom-style.css'
 
 const head = createHead();
 const appName = 'Lengzem Admin';

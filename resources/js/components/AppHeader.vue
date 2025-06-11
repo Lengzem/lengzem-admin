@@ -59,7 +59,7 @@ const activeItemStyles = computed(
 );
 
 const mainNavItems: NavItem[] = [
-    { title: 'Home', href: '/', icon: Home },
+    { title: 'Dashboard', href: '/dashboard', icon: Home },
     { title: 'Search', href: '/search', icon: Search },
     { title: 'Subscription', href: '/subscription', icon: Crown },
 ];

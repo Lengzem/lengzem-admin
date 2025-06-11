@@ -13,11 +13,11 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
 
 <template>
   <div
-    class="min-h-screen bg-gradient-to-b from-white via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 mt-16 rounded-t-3xl flex items-center justify-center">
+    class="min-h-screen bg-gradient-to-b from-white via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-t-3xl flex items-center justify-center">
 
-    <div class="w-full max-w-4xl mx-auto">
+    <div class="w-full max-w-6xl">
       <section
-        class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 md:p-10 transition-all duration-300 space-y-8 min-h-[800px]">
+      >
         <slot />
       </section>
     </div>
