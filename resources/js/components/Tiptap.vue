@@ -82,7 +82,7 @@ const editor = useEditor({
   ],
   editorProps: {
     attributes: {
-      class: 'border border-gray-400 p-4 min-h-[12rem] max-h-[12rem] overflow-y-auto outline-none prose max-w-none',
+      class: 'border border-gray-400 p-4 min-h-[40rem] max-h-[50rem] overflow-y-auto outline-none prose max-w-none',
     },
   },
 })

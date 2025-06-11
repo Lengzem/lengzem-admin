@@ -1,6 +1,6 @@
 <template>
-  <div class="container mx-auto p-6">
-    <div class="flex items-start mb-6">
+  <div class="container mx-auto p-4">
+    <div class="flex items-start mb-4">
       <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50 sm:mx-0 sm:h-10 sm:w-10">
         <PlusIcon class="h-6 w-6 text-green-600 dark:text-green-400" aria-hidden="true" />
       </div>
@@ -203,7 +203,7 @@
             </div>
             <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
               <!-- Tiptap Editor with increased height -->
-              <Tiptap v-model="article.content" class="min-h-[calc(100vh-250px)]" />
+              <Tiptap v-model="article.content" class="min-h-[calc(100vh-300px)]" />
             </div>
           </div>
         </div>
