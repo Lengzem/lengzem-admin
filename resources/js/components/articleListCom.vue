@@ -75,8 +75,11 @@
                       <button @click="openEditModal(article.id)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">
                   Edit
                 </button>
+                <button @click="goToCommentPage(article.id)" type="button" class="text-black-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">
+                  Comments
+                </button>
                       <!-- Updated Delete Button -->
-                      <button @click="handleDeleteArticle(article.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">
+                      <button @click="openConfirmDeleteModal(article.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">
                         Delete
                       </button>
                     </td>
@@ -137,6 +140,49 @@
             </div>
           </div>
         </transition>
+         <!-- NEW: Delete Confirmation Modal -->
+    <transition
+      enter-active-class="ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100"
+      leave-active-class="ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0"
+    >
+      <div v-if="showConfirmDeleteModal" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <transition
+              enter-active-class="ease-out duration-300" enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to-class="opacity-100 translate-y-0 sm:scale-100"
+              leave-active-class="ease-in duration-200" leave-from-class="opacity-100 translate-y-0 sm:scale-100" leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                  <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10">
+                      <ExclamationTriangleIcon class="h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
+                    </div>
+                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                      <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100" id="modal-title">Delete Article</h3>
+                      <div class="mt-2">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Are you sure you want to delete this article? This action cannot be undone.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                  <button @click="confirmDelete" :disabled="isDeleting" type="button" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50">
+                    <span v-if="isDeleting" class="flex items-center">
+                      <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Deleting...
+                    </span>
+                    <span v-else>Delete</span>
+                  </button>
+                  <button @click="closeConfirmDeleteModal" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-700 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:w-auto">Cancel</button>
+                </div>
+              </div>
+            </transition>
+          </div>
+        </div>
+      </div>
+    </transition>
         </div>
 </template>
 
@@ -147,6 +193,12 @@ import ArticleDetailModal from './articleDetailCom.vue';
 import ArticleEdit from './articleUpdateCom.vue';
 import { useToast } from 'vue-toastification';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationNext, PaginationPrevious} from '@/components/ui/pagination';
+import { router } from '@inertiajs/vue3';
+
+const goToCommentPage = (articleId) => {
+  console.log('📤 Sending article_id:', articleId);
+  router.get(route('comment'), { article_id: articleId });
+};
 
 const articles = ref([]);
 const loadingArticles = ref(true);
@@ -167,6 +219,10 @@ const selectedArticleId = ref(null);
 
 const showEditModal = ref(false);
 const editingArticleId = ref(null);
+
+const showConfirmDeleteModal = ref(false);
+const articleToDeleteId = ref(null);
+const isDeleting = ref(false);
 
 const openArticleViewModal = (articleId) => {
   selectedArticleId.value = articleId;
@@ -194,22 +250,35 @@ const handleArticleUpdated = () => {
   toast.info("Article list has been updated.");
 };
 
-const handleDeleteArticle = async (articleId) => {
-  if (!window.confirm('Are you sure you want to delete this article?')) {
-    return;
-  }
+const openConfirmDeleteModal = (articleId) => {
+  articleToDeleteId.value = articleId;
+  showConfirmDeleteModal.value = true;
+};
+
+const closeConfirmDeleteModal = () => {
+  showConfirmDeleteModal.value = false;
+  articleToDeleteId.value = null;
+};
+
+const confirmDelete = async () => {
+  if (!articleToDeleteId.value) return;
+
+  isDeleting.value = true;
   try {
-    await axios.delete(route('proxy.delete', { endpoint: `articles/${articleId}` }));
+    await axios.delete(route('proxy.delete', { endpoint: `articles/${articleToDeleteId.value}` }));
     toast.success('Article deleted successfully!');
-    // Re-fetch the current page, or previous page if it was the last item
+    
     if (articles.value.length === 1 && pagination.current_page > 1) {
       fetchArticles(pagination.current_page - 1);
     } else {
       fetchArticles(pagination.current_page);
     }
   } catch (err) {
-    console.error(`Error deleting article with ID ${articleId}:`, err);
+    console.error(`Error deleting article with ID ${articleToDeleteId.value}:`, err);
     toast.error('Failed to delete the article.');
+  } finally {
+    isDeleting.value = false;
+    closeConfirmDeleteModal();
   }
 };
 
@@ -233,13 +302,13 @@ const fetchArticles = async (page = 1) => {
       articles.value = [];
     }
   } catch (err) {
-    console.error("Error fetching articles:", err);
     if (err.response?.status === 401) {
-      articlesError.value = "You are not authorized. Please log in again.";
+      articlesError.value = "You are not authorized. Please refresh the page.";
     } else {
-      articlesError.value = "Failed to load articles. Please try again later.";
+      articlesError.value = "Failed to load authors. Please try again later.";
     }
-    articles.value = [];
+    console.error("Error fetching authors:", err);
+    authors.value = [];
   } finally {
     loadingArticles.value = false;
   }

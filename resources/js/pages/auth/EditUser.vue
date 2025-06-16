@@ -6,14 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/InputError.vue';
-import axios from 'axios';
-import { useAuthStore } from '@/stores/authStore'; // 1. IMPORT THE AUTH STORE
-import { getAuth, getUser } from 'firebase/auth';
+import axios from 'axios'; // Use your configured axios instance
+import { useAuthStore } from '@/stores/authStore';
+import { getAuth } from 'firebase/auth';
 
 const toast = useToast();
-const authStore = useAuthStore(); // 2. INSTANTIATE THE STORE
+const authStore = useAuthStore();
 
-// Form to manage input data
 const form = useForm({
   name: '',
   role: '',
@@ -24,139 +23,64 @@ const form = useForm({
   phone: '',
 });
 
-let isEditMode = ref(false); // To track whether it's in an edit mode or create mode
-
-// --- Fetch profile data from API ---
-const fetchProfile = async () => {
-  if (!authStore.user) return; // Safety check
-
-  try {
-    // Log the user object to debug
-    console.log("Firebase User Data:", authStore.user);
-
-    // Fetch additional data from Firebase
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (user) {
-      form.id = user.uid;  // Firebase UID
-      form.phone = user.phoneNumber || '';  // Firebase phone number
-      form.email = user.email || '';  // Firebase email
-
-      console.log("Form Data after Firebase info:", form.data());
-    } else {
-      toast.error('Firebase user data not found.');
-      return;
-    }
-
-    // 3. SIMPLIFIED API CALL
-    const response = await axios.get(route('proxy.get'), {
-        params: {
-            endpoint: `users/${authStore.user.uid}`,
-        },
-    });
-
-    const profileData = response.data.data;
-
-    // Prefill the form with profile data
-    if (profileData) {
-      form.defaults({
-        name: profileData.name || '',
-        role: profileData.role || '',
-        bio: profileData.bio || '',
-        profile_image_url: profileData.profile_image_url || '',
-      });
-
-      isEditMode.value = true;
-    } else {
-      isEditMode.value = false;
-    }
-
-    form.reset(); // Reset after pre-filling
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-  }
-};
-
-// Fetch user data from Firebase directly
-const fetchFirebaseUserData = async () => {
+const initializeFormWithFirebaseData = () => {
   const auth = getAuth();
-  const user = auth.currentUser;
+  const firebaseUser = auth.currentUser;
 
-  if (user) {
-    console.log('Firebase User:', user);
-    form.id = user.uid;
-    form.phone = user.phoneNumber || ''; // Fetch phone number from Firebase user object
-    form.email = user.email || ''; // Fetch email from Firebase user object
-  } else {
-    console.log('No Firebase user found');
+  if (firebaseUser) {
+    // Pre-fill the form with data from Firebase
+    form.id = firebaseUser.uid;
+    form.email = firebaseUser.email || '';
+    form.phone = firebaseUser.phoneNumber || '';
+    form.name = firebaseUser.displayName || '';
+    form.profile_image_url = firebaseUser.photoURL || '';
   }
 };
 
-// --- onMounted logic ---
 onMounted(async () => {
   if (!authStore.user) {
     await authStore.initAuth();
   }
-
   if (authStore.user) {
-    // Fetch the user profile data after the auth is initialized
-    await fetchProfile();
-    await fetchFirebaseUserData();
+    initializeFormWithFirebaseData();
   } else {
-    toast.error('You need to be logged in to edit your profile.');
+    toast.error('You need to be logged in to create a profile.');
     router.visit('/login');
   }
 });
 
-// --- Submit function for creating/updating profile ---
+
+// --- SIMPLIFIED submit function using only POST ---
 const submit = async () => {
-  if (!authStore.user) {
-    toast.error('User session not found. Please log in again.');
-    return;
-  }
+
+  form.processing = true; // Use Inertia's processing state
 
   try {
-    const payload = {
-      ...form.data(),
-    };
-    console.log(payload)
+    // The payload is simply the current form data
+    const payload = form.data();
 
-    // Conditionally choose POST or PUT based on whether it's a new profile or editing an existing one
-    const apiMethod = isEditMode.value;
-    console.log(apiMethod)
-
-    if (apiMethod) {
-      await axios.put(
-      route('proxy.put'),
-      payload,
-      {
-        params: {
-          endpoint: `users/${authStore.user.uid}`, // Use UID from the store
-        },
-      }
-    );
-    } else {
-      await axios.post(route('proxy.post'),
-      payload,
-      {
-        params: {
-          endpoint: 'users', // Use UID from the store
-        },
-      }
-    );
-    }
-    toast.success(isEditMode.value ? 'Profile updated successfully!' : 'Profile created successfully!');
-    router.visit('/dashboard');
-  } catch (error: any) {
-    if (error.response && error.response.data && error.response.data.errors) {
-        form.errors = error.response.data.errors;
-        toast.error('Please correct the errors in the form.');
-    } else {
-        toast.error('An unexpected error occurred during the update.');
-    }
-    console.error('Profile submit error:', error);
+    console.log("🔄 Submitting authorPayload:", payload);
+    
+    // Always use POST. The backend should handle "update or create".
+    await axios.post(
+  route('proxy.post'),
+  payload,
+  {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: {
+      endpoint: 'users', // The backend uses this to route internally
+    },
   }
+);
+    
+    toast.success('Profile saved successfully!');
+    router.visit('/dashboard');
+
+  } catch (error: any) {
+console.error('📛 Full error response:', error.response.data.error);
+}
 };
 </script>
 
@@ -194,7 +118,6 @@ const submit = async () => {
                 <option disabled value="">Select Role</option>
                 <option value="admin">Admin</option>
                 <option value="editor">Editor</option>
-                <option value="reader">Reader</option>
             </select>
             <InputError :message="form.errors.role" class="mt-1" />
         </div>

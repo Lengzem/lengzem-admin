@@ -25,13 +25,13 @@
               <span>{{ showSearchInput ? 'Hide Search' : 'Search Category' }}</span>
             </button>
             <button
-              type="button"
-              @click="openAddCategoryModal"
-              class="w-full sm:w-auto px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-            >
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-              <span>Add New Category</span>
-            </button>
+            type="button"
+            @click="openAddCategoryModal"
+            class="w-full sm:w-auto px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            <span>Add New Category</span>
+          </button>
           </div>
   
           <!-- Search Input Section with Transition -->
@@ -92,12 +92,11 @@
       </div>
   
       <!-- Add/Edit Category Modal -->
-      <CategoryModal
-        :is-visible="showCategoryModal"
-        :category-data="editingCategory"
-        @close="closeCategoryModal"
-        @saved="handleCategorySaved"
-      />
+      <CategoryAddModal
+      :is-visible="showCategoryAddModal"
+      @close="closeAddCategoryModal"
+      @saved="handleCategorySaved"
+    />
     </div>
   </template>
   
@@ -105,98 +104,97 @@
   import { ref, nextTick, watch, onUnmounted } from 'vue';
   import axios from 'axios';
   import { useToast } from 'vue-toastification';
-  // Import a modal component for categories (assuming you will create/have one)
- // import CategoryModal from './CategoryModal.vue';
+  import CategoryAddModal from './categAddCom.vue';
   
   const showSearchInput = ref(false);
-  const searchQuery = ref('');
-  const lastSearchQuery = ref('');
-  const searchResults = ref([]);
-  const isSearching = ref(false);
-  const searchPerformed = ref(false);
-  const searchInputField = ref(null);
-  const toast = useToast();
-  
-  const showCategoryModal = ref(false);
-  const editingCategory = ref(null);
-  
-  let debounceTimer = null;
-  
-  const toggleSearchInput = async () => {
-    showSearchInput.value = !showSearchInput.value;
-    if (showSearchInput.value) {
-      await nextTick();
-      searchInputField.value?.focus();
-    } else {
-      searchQuery.value = '';
+const searchQuery = ref('');
+const lastSearchQuery = ref('');
+const searchResults = ref([]);
+const isSearching = ref(false);
+const searchPerformed = ref(false);
+const searchInputField = ref(null);
+const toast = useToast();
+
+// 2. State for the Add modal
+const showCategoryAddModal = ref(false);
+
+let debounceTimer = null;
+
+const toggleSearchInput = async () => {
+  showSearchInput.value = !showSearchInput.value;
+  if (showSearchInput.value) {
+    await nextTick();
+    searchInputField.value?.focus();
+  } else {
+    searchQuery.value = '';
+    searchResults.value = [];
+    searchPerformed.value = false;
+  }
+};
+
+const performSearch = async () => {
+  const query = searchQuery.value.trim();
+  if (!query) {
+    searchResults.value = [];
+    searchPerformed.value = false;
+    return;
+  }
+
+  isSearching.value = true;
+  searchPerformed.value = true;
+  lastSearchQuery.value = query;
+
+  try {
+      const response = await axios.get(route('proxy.get'), {
+          params: {
+              endpoint: 'categories/search',
+              name: query
+          }
+      });
+      searchResults.value = response.data.data || [];
+  } catch (error) {
+      console.error("Error searching for categories:", error);
+      toast.error("Failed to search for categories.");
+      searchResults.value = [];
+  } finally {
+      isSearching.value = false;
+  }
+};
+
+watch(searchQuery, (newQuery) => {
+  clearTimeout(debounceTimer);
+  if (newQuery.trim() === '') {
       searchResults.value = [];
       searchPerformed.value = false;
-    }
-  };
-  
-  const performSearch = async () => {
-    const query = searchQuery.value.trim();
-    if (!query) {
-      searchResults.value = [];
-      searchPerformed.value = false;
+      isSearching.value = false;
       return;
-    }
-  
-    isSearching.value = true;
-    searchPerformed.value = true;
-    lastSearchQuery.value = query;
-  
-    try {
-        const response = await axios.get(route('proxy.get'), {
-            params: {
-                endpoint: 'categories/search',
-                name: query
-            }
-        });
-        searchResults.value = response.data.data || [];
-    } catch (error) {
-        console.error("Error searching for categories:", error);
-        toast.error("Failed to search for categories.");
-        searchResults.value = [];
-    } finally {
-        isSearching.value = false;
-    }
-  };
-  
-  watch(searchQuery, (newQuery) => {
-    clearTimeout(debounceTimer);
-    if (newQuery.trim() === '') {
-        searchResults.value = [];
-        searchPerformed.value = false;
-        isSearching.value = false;
-        return;
-    }
-    isSearching.value = true;
-    debounceTimer = setTimeout(() => {
-        performSearch();
-    }, 500);
-  });
-  
-  onUnmounted(() => {
-    clearTimeout(debounceTimer);
-  });
-  
-  const openAddCategoryModal = () => {
-    editingCategory.value = null;
-    showCategoryModal.value = true;
-  };
-  
-  const closeCategoryModal = () => {
-    showCategoryModal.value = false;
-  };
-  
-  const handleCategorySaved = (newCategory) => {
-    closeCategoryModal();
-    toast.success(`Category "${newCategory.name}" saved successfully!`);
-    if (showSearchInput.value) {
-      searchQuery.value = newCategory.name;
-    } else {
-      // Optionally, if you have a main list, you would refresh it here.
-    }
-  };
-  </script>
+  }
+  isSearching.value = true;
+  debounceTimer = setTimeout(() => {
+      performSearch();
+  }, 500);
+});
+
+onUnmounted(() => {
+  clearTimeout(debounceTimer);
+});
+
+// 3. Functions to control the Add modal
+const openAddCategoryModal = () => {
+  showCategoryAddModal.value = true;
+};
+
+const closeAddCategoryModal = () => {
+  showCategoryAddModal.value = false;
+};
+
+const handleCategorySaved = () => {
+  closeAddCategoryModal();
+  toast.success(`Category saved successfully!`);
+  // If we are in search mode, refresh the search to show the new category
+  if (showSearchInput.value && searchQuery.value) {
+    performSearch();
+  }
+  // If you replace the placeholder with a real list, you would refresh it here.
+};
+</script>

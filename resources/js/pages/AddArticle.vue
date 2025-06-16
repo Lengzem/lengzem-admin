@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import addArticle from '@/components/addArticleCom.vue';
+import addArticle from '@/components/articleAddCom.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

@@ -88,14 +88,17 @@
                 </div>
     
                 <!-- Modal Footer -->
-                <div class="flex items-center justify-end p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                  <button @click="$emit('close')" type="button" class="px-5 py-2.5 text-sm font-medium rounded-lg border ...">Cancel</button>
-                  <button type="submit" :disabled="isSaving || loading" class="ml-3 px-5 py-2.5 text-sm font-medium rounded-lg bg-purple-600 hover:bg-purple-700 text-white ...">
-                    <span v-if="isSaving" class="inline-flex items-center">
-                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"></svg>
-                      Saving...
-                    </span>
-                    <span v-else>Save Changes</span>
+                <div class="flex items-center justify-end p-4 space-x-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                  <button @click="$emit('close')" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+                  Cancel
+               </button>
+                  <button type="submit" :disabled="isSaving || loading" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                    <svg v-if="isSaving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>{{ isSaving ? 'Saving...' : 'Save User' }}</span>
                   </button>
                 </div>
               </form>
@@ -168,6 +171,7 @@
   
     isSaving.value = true;
     saveError.value = null;
+    console.log("data:", formData.value)
     
     try {
       await axios.put(route('proxy.put'), formData.value, {
@@ -177,7 +181,7 @@
       toast.success('User updated successfully!');
       emit('saved');
     } catch (err) {
-        saveError.value = err.response?.data?.message || "An error occurred while saving the user.";
+        saveError.value = err.response?.data?.error || "An error occurred while saving the user.";
         console.error("Failed to update user:", err);
         toast.error(saveError.value);
     } finally {

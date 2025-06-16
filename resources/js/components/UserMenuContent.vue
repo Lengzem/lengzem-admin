@@ -7,9 +7,6 @@ import { LogOut, UserRound } from 'lucide-vue-next';
 import { getAuth, signOut } from 'firebase/auth';
 import { router } from '@inertiajs/vue3';
 import { saveLastPage } from '@/utils/authRedirect';
-import { useAgeRestriction } from '@/composables/useAgeRestriction';
-
-const { setAgeRestriction } = useAgeRestriction();
 
 interface Props {
     user: User;
@@ -23,8 +20,6 @@ const handleLogout = async () => {
   try {
     await signOut(auth);
 
-    setAgeRestriction(false);
-
     // Optional: You can redirect or refresh the page
     router.visit('/login'); // or wherever you want to send them
   } catch (error) {
@@ -37,7 +32,7 @@ const handleLogout = async () => {
 <template>
     <DropdownMenuLabel class="p-0 font-normal">
         <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <UserInfo :user="user" :show-email="true" />
+            <UserInfo :user="user" :show-contact="true" />
         </div>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />

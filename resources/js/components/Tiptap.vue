@@ -1,16 +1,15 @@
 <script setup>
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
-// --- Only import extensions NOT in StarterKit ---
 import { Color } from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
+import { Image } from '@tiptap/extension-image'
 import TextAlign from '@tiptap/extension-text-align'
 import { watch } from 'vue'
 
-// Import all the necessary icons (this part is correct)
+// Import all the necessary icons
 import FormatBold from 'vue-material-design-icons/FormatBold.vue'
 import FormatItalic from 'vue-material-design-icons/FormatItalic.vue'
 import FormatUnderline from 'vue-material-design-icons/FormatUnderline.vue'
@@ -29,6 +28,7 @@ import ImagePlus from 'vue-material-design-icons/ImagePlus.vue'
 import FormatAlignLeft from 'vue-material-design-icons/FormatAlignLeft.vue'
 import FormatAlignCenter from 'vue-material-design-icons/FormatAlignCenter.vue'
 import FormatAlignRight from 'vue-material-design-icons/FormatAlignRight.vue'
+import FormatAlignJustify from 'vue-material-design-icons/FormatAlignJustify.vue'
 import Undo from 'vue-material-design-icons/Undo.vue'
 import Redo from 'vue-material-design-icons/Redo.vue'
 
@@ -38,24 +38,38 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+// ✅ Extend Image to support inline style
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: 'width: 100%; max-width: 100%; height: auto; object-fit: contain;',
+        parseHTML: element => element.getAttribute('style'),
+        renderHTML: attributes => {
+          return {
+            style: attributes.style,
+          }
+        },
+      },
+    }
+  },
+})
+
 const editor = useEditor({
   content: props.modelValue,
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
   },
   extensions: [
-    // Use StarterKit as the base and configure it
     StarterKit.configure({
-      // Heading, BulletList, OrderedList, etc., are all configured here
       heading: {
         levels: [1, 2, 3],
       },
     }),
-    // Now, add the extensions that are NOT part of StarterKit
     TextStyle,
     Color,
     Underline,
-    Image,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
     }),
@@ -63,16 +77,16 @@ const editor = useEditor({
       openOnClick: false,
       autolink: true,
     }),
+    CustomImage, // 👈 Use extended image with inline style support
   ],
   editorProps: {
     attributes: {
-      // Small UI improvement: remove top border to merge with toolbar, add dark mode prose
       class: 'border-t-0 p-4 min-h-[40rem] max-h-[50rem] overflow-y-auto outline-none prose dark:prose-invert max-w-none focus:outline-none',
     },
   },
 })
 
-// Watch for changes in the v-model and update the editor content accordingly
+// Watch for external modelValue changes and update editor content
 watch(() => props.modelValue, (newValue) => {
   if (editor.value && editor.value.getHTML() === newValue) {
     return
@@ -80,11 +94,11 @@ watch(() => props.modelValue, (newValue) => {
   editor.value?.commands.setContent(newValue, false)
 })
 
-// --- Logic for Links and Images ---
+// 🔗 Set link
 const setLink = () => {
   const previousUrl = editor.value.getAttributes('link').href
   const url = window.prompt('URL', previousUrl)
-  if (url === null) return; // User cancelled
+  if (url === null) return
   if (url === '') {
     editor.value.chain().focus().extendMarkRange('link').unsetLink().run()
     return
@@ -92,19 +106,27 @@ const setLink = () => {
   editor.value.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
 }
 
+// 🖼️ Add image with inline style
 const addImage = () => {
-  const url = window.prompt('Image URL');
+  const url = window.prompt('Image URL')
   if (url) {
-    // Create image HTML with inline CSS
-    const imgHtml = `<img src="${url}" style="width: 100%; max-width: 100%; height: auto; object-fit: contain;" />`;
-    editor.value.chain().focus().insertContent(imgHtml).run();
+    editor.value
+      .chain()
+      .focus()
+      .setImage({
+        src: url,
+        style: 'width: 100%; max-width: 100%; height: auto; object-fit: contain;',
+      })
+      .run()
   }
 }
 
+// 🎨 Text color
 const setTextColor = (color) => {
   editor.value.chain().focus().setColor(color).run()
 }
 </script>
+
 
 <template>
   <div class="tiptap-container">
@@ -149,9 +171,13 @@ const setTextColor = (color) => {
       <button type="button" @click="editor.chain().focus().setTextAlign('center').run()" :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }" title="Align Center">
         <FormatAlignCenter />
       </button>
+      <button type="button" @click="editor.chain().focus().setTextAlign('justify').run()" :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }" title="Align Justify">
+        <FormatAlignJustify />
+      </button>
       <button type="button" @click="editor.chain().focus().setTextAlign('right').run()" :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }" title="Align Right">
         <FormatAlignRight />
       </button>
+
       <div class="divider"></div>
 
       <!-- Group 4: Lists -->

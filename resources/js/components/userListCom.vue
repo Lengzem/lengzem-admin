@@ -247,9 +247,13 @@ const fetchUsers = async (page = 1) => {
       users.value = [];
     }
   } catch (err) {
-    usersError.value = "Failed to load users.";
-    if (err.response) usersError.value += ` (Status: ${err.response.status})`;
-    users.value = [];
+    if (err.response?.status === 401) {
+      usersError.value = "You are not authorized. Please refresh the page.";
+    } else {
+      usersError.value = "Failed to load authors. Please try again later.";
+    }
+    console.error("Error fetching authors:", err);
+    authors.value = [];
   } finally {
     loadingUsers.value = false;
   }

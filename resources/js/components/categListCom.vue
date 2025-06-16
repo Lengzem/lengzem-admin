@@ -50,7 +50,7 @@
                   <td class="hidden sm:table-cell px-6 py-4 whitespace-normal text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">{{ category.description || '-' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(category.created_at) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button @click="openEditCategoryModal(category)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
+                    <button @click="openEditCategoryModal(category.id)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
                     <button @click="openConfirmDeleteModal(category.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
                   </td>
                 </tr>
@@ -70,7 +70,13 @@
     </div>
 
     <!-- Add/Edit Category Modal (Placeholder) -->
-    <!-- <CategoryModal ... /> -->
+    <CategoryEditModal
+      :is-visible="showCategoryEditModal"
+      :category-id="editingCategoryId"
+      @close="closeCategoryEditModal"
+      @saved="handleCategorySaved"
+    />
+
 
     <!-- Delete Confirmation Modal -->
     <transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -117,6 +123,7 @@ import { ref, onMounted, reactive } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
+import CategoryEditModal from './categUpdateCom.vue';
 
 const categories = ref([]);
 const loadingCategories = ref(true);
@@ -127,8 +134,8 @@ const pagination = reactive({
   current_page: 1, from: 0, to: 0, total: 0, last_page: 1, prev_page_url: null, next_page_url: null,
 });
 
-const showCategoryModal = ref(false);
-const editingCategory = ref(null);
+const showCategoryEditModal = ref(false);
+const editingCategoryId = ref(null);
 
 // State for Delete Confirmation Modal
 const showConfirmDeleteModal = ref(false);
@@ -149,13 +156,16 @@ try {
     categories.value = [];
   }
 } catch (err) {
-  categoriesError.value = "Failed to load categories.";
-  if (err.response) categoriesError.value += ` (Status: ${err.response.status})`;
-  console.error("Error fetching categories:", err);
-  categories.value = [];
-} finally {
-  loadingCategories.value = false;
-}
+    if (err.response?.status === 401) {
+      categoriesError.value = "You are not authorized. Please refresh the page.";
+    } else {
+      categoriesError.value = "Failed to load authors. Please try again later.";
+    }
+    console.error("Error fetching authors:", err);
+    authors.value = [];
+  } finally {
+    loadingCategories.value = false;
+  }
 };
 
 const formatDate = (dateString) => {
@@ -167,24 +177,19 @@ try {
 }
 };
 
-const openAddCategoryModal = () => {
-editingCategory.value = null;
-showCategoryModal.value = true;
+const openEditCategoryModal = (categoryId) => {
+  editingCategoryId.value = categoryId;
+  showCategoryEditModal.value = true;
 };
 
-const openEditCategoryModal = (category) => {
-editingCategory.value = { ...category };
-showCategoryModal.value = true;
-};
-
-const closeCategoryModal = () => {
-showCategoryModal.value = false;
-editingCategory.value = null;
+const closeCategoryEditModal = () => {
+  showCategoryEditModal.value = false;
+  editingCategoryId.value = null;
 };
 
 const handleCategorySaved = () => {
-fetchCategories(pagination.current_page);
-closeCategoryModal();
+  fetchCategories(pagination.current_page); // Refresh the list
+  closeCategoryEditModal();
 };
 
 const openConfirmDeleteModal = (categoryId) => {

@@ -29,16 +29,6 @@
               </svg>
               <span>{{ showSearchInput ? 'Hide Search Panel' : 'Search For Users' }}</span>
             </button>
-            <button
-              type="button"
-              @click="openNewUserModal"
-              class="w-full sm:w-auto px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-            >
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Add New User</span>
-            </button>
           </div>
   
           <!-- Search Input Section with Transition -->

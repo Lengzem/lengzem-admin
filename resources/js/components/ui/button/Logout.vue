@@ -21,19 +21,12 @@
   import { router } from '@inertiajs/vue3';
   import { LogOut } from 'lucide-vue-next';
   import { getAuth, signOut } from 'firebase/auth';
-  import { useAgeRestriction } from '@/composables/useAgeRestriction'; // adjust path as needed
-  
-  const { setAgeRestriction } = useAgeRestriction();
   
   const handleLogout = async () => {
     const auth = getAuth();
     try {
       await signOut(auth);
-  
-      // Reset age restriction to Kids mode on logout
-      setAgeRestriction(false);
-  
-      // Redirect to homepage or login page
+
       router.visit('/login');
     } catch (error) {
       console.error('Logout error:', error);

@@ -50,8 +50,8 @@
                   <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 text-center">{{ tag.articles_count !== undefined ? tag.articles_count : '-' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(tag.created_at) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button @click="openEditTagModal(tag)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
-                    <button @click="confirmDeleteTag(tag.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
+                    <button @click="openEditTagModal(tag.id)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
+                    <button @click="openConfirmDeleteModal(tag.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
                   </td>
                 </tr>
               </tbody>
@@ -91,36 +91,70 @@
       </div>
     </div>
 
-    <!-- Add/Edit Tag Modal (Placeholder) -->
-    <!-- 
-    <TagModal
-      :is-visible="showTagModal"
-      :tag-data="editingTag"
-      @close="closeTagModal"
+    <!-- Edit Tag Modal -->
+    <TagEditModal
+      :is-visible="showTagEditModal"
+      :tag-id="tagToEditId"
+      @close="closeEditTagModal"
       @saved="handleTagSaved"
-    /> 
-    -->
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
+      <div v-if="showConfirmDeleteModal" class="relative z-50">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to-class="opacity-100 translate-y-0 sm:scale-100" leave-active-class="ease-in duration-200" leave-from-class="opacity-100 translate-y-0 sm:scale-100" leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+              <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                  <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10">
+                      <ExclamationTriangleIcon class="h-6 w-6 text-red-600 dark:text-red-400" aria-hidden="true" />
+                    </div>
+                    <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                      <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Delete Tag</h3>
+                      <div class="mt-2">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Are you sure you want to delete this tag? This action cannot be undone.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                  <button 
+                @click="confirmDelete" 
+                :disabled="isDeleting" 
+                type="button" 
+                class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50"
+              >
+                    <span v-if="isDeleting">Deleting...</span>
+                    <span v-else>Delete</span>
+                  </button>
+                  <button @click="closeConfirmDeleteModal" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-700 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:w-auto">Cancel</button>
+                </div>
+              </div>
+            </transition>
+          </div>
+        </div>
+      </div>
+    </transition>
+
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive, watch } from 'vue';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
+  Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationNext, PaginationPrevious,
 } from '@/components/ui/pagination';
-
-// Assume `route` is globally available
-// const route = (name, params) => { /* ... */ };
+import TagEditModal from './tagsUpdateCom.vue'; // Corrected import name
 
 const tags = ref([]);
 const loadingTags = ref(true);
 const tagsError = ref(null);
+const toast = useToast();
 
 const pagination = reactive({
     current_page: 1,
@@ -131,8 +165,14 @@ const pagination = reactive({
     last_page: 1,
 });
 
-const showTagModal = ref(false);
-const editingTag = ref(null);
+// State for Edit Modal
+const showTagEditModal = ref(false);
+const tagToEditId = ref(null);
+
+// State for Delete Modal
+const showConfirmDeleteModal = ref(false);
+const tagToDeleteId = ref(null);
+const isDeleting = ref(false);
 
 const fetchTags = async (page = 1) => {
   loadingTags.value = true;
@@ -149,9 +189,13 @@ const fetchTags = async (page = 1) => {
       tags.value = [];
     }
   } catch (err) {
-    tagsError.value = "Failed to load tags.";
-    if (err.response) tagsError.value += ` (Status: ${err.response.status})`;
-    tags.value = [];
+    if (err.response?.status === 401) {
+      tagsError.value = "You are not authorized. Please refresh the page.";
+    } else {
+      tagsError.value = "Failed to load authors. Please try again later.";
+    }
+    console.error("Error fetching authors:", err);
+    authors.value = [];
   } finally {
     loadingTags.value = false;
   }
@@ -174,36 +218,52 @@ const formatDate = (dateString) => {
   }
 };
 
-const openEditTagModal = (tag) => {
-  editingTag.value = { ...tag }; 
-  showTagModal.value = true;
-  console.log("Open Edit Tag Modal for:", tag);
+const openEditTagModal = (tagId) => {
+  tagToEditId.value = tagId;
+  showTagEditModal.value = true;
 };
 
-const closeTagModal = () => {
-  showTagModal.value = false;
-  editingTag.value = null;
+const closeEditTagModal = () => {
+  showTagEditModal.value = false;
+  tagToEditId.value = null;
 };
 
 const handleTagSaved = () => {
   fetchTags(pagination.current_page); 
-  closeTagModal();
+  closeEditTagModal();
 };
 
-const confirmDeleteTag = (tagId) => {
-  if (window.confirm(`Are you sure you want to delete tag ID: ${tagId}?`)) {
-    deleteTag(tagId);
+// --- Delete Modal Logic ---
+const openConfirmDeleteModal = (tagId) => {
+  tagToDeleteId.value = tagId;
+  showConfirmDeleteModal.value = true;
+};
+
+const closeConfirmDeleteModal = () => {
+  showConfirmDeleteModal.value = false;
+  tagToDeleteId.value = null;
+};
+
+const confirmDelete = async () => {
+  if (!tagToDeleteId.value) return;
+
+  isDeleting.value = true;
+  try {
+    await axios.delete(route('proxy.delete', { endpoint: `tags/${tagToDeleteId.value}` }));
+    toast.success('Tag deleted successfully!');
+    
+    if (tags.value.length === 1 && pagination.current_page > 1) {
+      await fetchTags(pagination.current_page - 1);
+    } else {
+      await fetchTags(pagination.current_page);
+    }
+  } catch (error) {
+    console.error("Error deleting tag:", error);
+    toast.error(error.response?.data?.message || "Failed to delete the tag.");
+  } finally {
+    isDeleting.value = false;
+    closeConfirmDeleteModal();
   }
-};
-
-const deleteTag = async (tagId) => {
-  console.log("Attempting to delete tag:", tagId);
-  // try {
-  //   await axios.delete(route('proxy.delete', { endpoint: `tags/${tagId}` }));
-  //   fetchTags(pagination.current_page);
-  // } catch (error) {
-  //   console.error("Error deleting tag:", error);
-  // }
 };
 
 onMounted(() => {

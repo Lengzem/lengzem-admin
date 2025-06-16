@@ -30,10 +30,10 @@
                 <div v-else-if="author" class="space-y-6">
                   <!-- Author Header -->
                   <div class="flex items-center space-x-4">
-                    <img class="h-20 w-20 rounded-full object-cover border-2 border-blue-500" :src="author.user.profile_image_url || defaultAvatar" :alt="author.pen_name">
+                    <img class="h-20 w-20 rounded-full object-cover border-2 border-blue-500" :src="author.profile_image_url || defaultAvatar" :alt="author.pen_name">
                     <div>
                       <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ author.pen_name }}</h3>
-                      <p class="text-sm text-gray-500 dark:text-gray-400">{{ author.user.name }} ({{ author.user.email }})</p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">{{ author.pen_name }} ({{ author.email }})</p>
                     </div>
                   </div>
   
@@ -57,7 +57,7 @@
                   <div>
                     <h4 class="font-semibold text-gray-700 dark:text-gray-300">Details</h4>
                     <dl class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                      <div class="flex justify-between"><dt class="text-gray-500">Phone:</dt><dd class="text-gray-800 dark:text-gray-200">{{ author.user.phone }}</dd></div>
+                      <div class="flex justify-between"><dt class="text-gray-500">Phone:</dt><dd class="text-gray-800 dark:text-gray-200">{{ author.phone }}</dd></div>
                       <div class="flex justify-between"><dt class="text-gray-500">Joined:</dt><dd class="text-gray-800 dark:text-gray-200">{{ formatDate(author.created_at) }}</dd></div>
                     </dl>
                   </div>
