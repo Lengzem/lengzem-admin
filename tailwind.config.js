@@ -1,4 +1,5 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
+import lineClamp from '@tailwindcss/line-clamp';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -76,5 +77,5 @@ export default {
     		}
     	}
     },
-    plugins: [require('tailwindcss-animate')],
+    plugins: [lineClamp,require('tailwindcss-animate')],
 };

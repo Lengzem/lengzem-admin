@@ -96,10 +96,12 @@
   
               <!-- Modal Footer -->
               <div class="flex items-center justify-end p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                <button @click="$emit('close')" type="button" class="px-5 py-2.5 text-sm font-medium rounded-lg border ...">
+                <button @click="$emit('close')" type="button" class="px-5 py-2.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
                   Cancel
                 </button>
-                <button type="submit" :disabled="isSaving || loading" class="ml-3 px-5 py-2.5 text-sm font-medium rounded-lg bg-blue-600 ...">
+                <button type="submit" :disabled="isSaving || loading" class="ml-3 px-5 py-2.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
                   <span v-if="isSaving">Saving...</span>
                   <span v-else>Save Changes</span>
                 </button>

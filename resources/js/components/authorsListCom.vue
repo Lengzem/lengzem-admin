@@ -65,8 +65,8 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="flex-shrink-0 h-10 w-10">
-                        <img v-if="author.profile_image_url" class="h-10 w-10 rounded-full object-cover"
-                          :src="author.profile_image_url" :alt="author.pen_name + ' profile image'">
+                        <img v-if="author.user.profile_image_url" class="h-10 w-10 rounded-full object-cover"
+                          :src="author.user.profile_image_url" :alt="author.pen_name + ' profile image'">
                         <span v-else
                           class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-semibold">
                           {{ author.pen_name ? author.pen_name.charAt(0).toUpperCase() : 'U' }}
@@ -80,7 +80,7 @@
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                    {{ author.phone ? author.phone : 'N/A' }}
+                    {{ author.user.phone ? author.user.phone : 'N/A' }}
                   </td>
                   <td
                     class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 text-center">
