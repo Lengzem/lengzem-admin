@@ -86,8 +86,7 @@
                       {{ user.role || 'N/A' }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{
-            formatDate(user.created_at) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{formatDate(user.created_at)|| 'N/A' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button @click="openUserDetailModal(user.id)" type="button"
                       class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium">View</button>
@@ -265,8 +264,24 @@ watch(() => pagination.current_page, (newPage) => {
   }
 });
 
-const formatDate = (dateString) => { /* ... unchanged ... */ };
-const roleClass = (role) => { /* ... unchanged ... */ };
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  try {
+    return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch (e) {
+    return 'Invalid Date';
+  }
+};
+const roleClass = (role) => {
+  const baseClasses = 'px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full capitalize';
+  const roleStyles = {
+    admin: 'bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-300',
+    editor: 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300',
+    reader: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    default: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+  };
+  return `${baseClasses} ${roleStyles[role] || roleStyles.default}`;
+};
 
 const openUserDetailModal = (userId) => {
   selectedUserId.value = userId;

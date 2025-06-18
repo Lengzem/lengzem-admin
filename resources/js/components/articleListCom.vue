@@ -65,7 +65,7 @@
                   <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{ article.id }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                  {{ article.author?.pen_name || article.author?.user?.name || 'Unknown Author' }}
+                  {{ article.author?.name || article.author?.user?.name || 'Unknown Author' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                   {{ article.published_at || article.scheduled_publish_time || 'Not Set' }}
@@ -339,7 +339,6 @@ const fetchArticles = async (page = 1) => {
       articlesError.value = "Failed to load authors. Please try again later.";
     }
     console.error("Error fetching authors:", err);
-    authors.value = [];
   } finally {
     loadingArticles.value = false;
   }

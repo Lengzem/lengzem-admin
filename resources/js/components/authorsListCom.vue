@@ -65,22 +65,22 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="flex-shrink-0 h-10 w-10">
-                        <img v-if="author.user.profile_image_url" class="h-10 w-10 rounded-full object-cover"
-                          :src="author.user.profile_image_url" :alt="author.pen_name + ' profile image'">
+                        <img v-if="author.profile_image_url" class="h-10 w-10 rounded-full object-cover"
+                          :src="author.profile_image_url" :alt="author.name + ' profile image'">
                         <span v-else
                           class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-semibold">
-                          {{ author.pen_name ? author.pen_name.charAt(0).toUpperCase() : 'U' }}
+                          {{ author.name ? author.name.charAt(0).toUpperCase() : 'U' }}
                         </span>
                       </div>
                       <div class="ml-4">
-                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ author.pen_name || 'N/A' }}
+                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ author.name || 'N/A' }}
                         </div>
                         <div class="text-sm text-gray-500 dark:text-gray-400">{{ author.email || 'N/A' }}</div>
                       </div>
                     </div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                    {{ author.user.phone ? author.user.phone : 'N/A' }}
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">  
+                    {{ author.phone ? author.phone : 'N/A' }}
                   </td>
                   <td
                     class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 text-center">
@@ -232,7 +232,7 @@ const fetchAuthors = async (page = 1) => {
   authorsError.value = null;
 
   try {
-    const response = await axios.get(route('proxy.get', { endpoint: 'authors', page }));
+    const response = await axios.get(route('proxy.get', { endpoint: 'users/editors', page }));
 
     if (response.data?.status === true && Array.isArray(response.data.data?.data)) {
       authors.value = response.data.data.data;
@@ -307,7 +307,7 @@ const confirmDelete = async () => {
   if (!authorToDeleteId.value) return;
   isDeleting.value = true;
   try {
-    await axios.delete(route('proxy.delete', { endpoint: `authors/${authorToDeleteId.value}` }));
+    await axios.delete(route('proxy.delete', { endpoint: `users/${authorToDeleteId.value}` }));
     toast.success('Author deleted successfully!');
     if (authors.value.length === 1 && pagination.current_page > 1) {
       fetchAuthors(pagination.current_page - 1);

@@ -166,7 +166,7 @@
     formData.value = {}; // Reset form data
   
     try {
-      const response = await axios.get(route('proxy.get', { endpoint: `authors/${id}` }));
+      const response = await axios.get(route('proxy.get', { endpoint: `users/editors/${id}` }));
       if (response.data?.status === true && response.data.data) {
         const author = response.data.data;
         // Pre-fill the form with the fetched data
