@@ -49,9 +49,13 @@
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ tag.slug || 'N/A' }}</td>
                   <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 text-center">{{ tag.articles_count !== undefined ? tag.articles_count : '-' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(tag.created_at) }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button @click="openEditTagModal(tag.id)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
-                    <button v-if="isAdmin" @click="openConfirmDeleteModal(tag.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
+                  <td class="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button @click="openEditTagModal(tag.id)" type="button" class="px-3 py-1 rounded-md font-medium transition-colors
+     text-blue-600 hover:bg-blue-50 hover:text-blue-800
+     dark:text-blue-400 dark:hover:bg-blue-900/30 dark:hover:text-blue-300">Edit</button>
+                    <button v-if="isAdmin" @click="openConfirmDeleteModal(tag.id)" type="button" class="px-3 py-1 rounded-md font-medium transition-colors
+     text-red-600 hover:bg-red-50 hover:text-red-800
+     dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300">Delete</button>
                   </td>
                 </tr>
               </tbody>

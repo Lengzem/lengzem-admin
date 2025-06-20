@@ -1,76 +1,95 @@
 <template>
-    <transition
-      enter-active-class="ease-out duration-200" 
-      enter-from-class="opacity-0" 
-      enter-to-class="opacity-100"
-      leave-active-class="ease-in duration-150" 
-      leave-from-class="opacity-100" 
-      leave-to-class="opacity-0"
-    >
-      <div v-if="isVisible" class="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm" @click.self="$emit('close')">
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <transition
-            enter-active-class="ease-out duration-200" 
-            enter-from-class="opacity-0 scale-95" 
-            enter-to-class="opacity-100 scale-100"
-            leave-active-class="ease-in duration-150" 
-            leave-from-class="opacity-100 scale-100" 
-            leave-to-class="opacity-0 scale-95"
-          >
-            <form @submit.prevent="handleSubmit" class="relative bg-white dark:bg-gray-900 w-full max-w-xl mx-auto rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
-              <!-- Modal Header -->
-              <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">
-                  Edit {{ commentData && commentData.parent_id ? 'Reply' : 'Comment' }}
-                </h2>
-                <button 
-                  @click="$emit('close')" 
-                  type="button" 
-                  class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                  aria-label="Close"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                  </svg>
-                </button>
+  <transition
+    enter-active-class="ease-out duration-200" 
+    enter-from-class="opacity-0" 
+    enter-to-class="opacity-100"
+    leave-active-class="ease-in duration-150" 
+    leave-from-class="opacity-100" 
+    leave-to-class="opacity-0"
+  >
+    <div v-if="isVisible" class="fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm" @click.self="$emit('close')">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <transition
+          enter-active-class="ease-out duration-200" 
+          enter-from-class="opacity-0 scale-95" 
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="ease-in duration-150" 
+          leave-from-class="opacity-100 scale-100" 
+          leave-to-class="opacity-0 scale-95"
+        >
+          <form @submit.prevent="handleSubmit" class="relative bg-white dark:bg-gray-900 w-full max-w-xl mx-auto rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
+              <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                <!-- MODIFIED: Uses a dedicated ref for more reliable title rendering -->
+                Edit {{ commentData && commentData.parent_id ? 'Reply' : 'Comment' }}
+              </h2>
+              <button 
+                @click="$emit('close')" 
+                type="button" 
+                class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6">
+              <!-- NEW: Loading State -->
+              <div v-if="loading" class="flex flex-col items-center justify-center py-10">
+                <svg class="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-3 text-gray-600 dark:text-gray-400">Loading comment...</p>
+              </div>
+
+              <!-- NEW: Fetch Error State -->
+              <div v-else-if="fetchError" class="p-4 rounded-md bg-red-50 dark:bg-red-900/30 text-center">
+                <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ fetchError }}</p>
               </div>
               
-              <!-- Modal Body -->
-              <div class="p-6 space-y-4">
-                <div>
-                  <label for="comment_content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
-                  <textarea 
-                    v-model="formData.comment" 
-                    id="comment_content" 
-                    rows="5" 
-                    required 
-                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    placeholder="Enter your comment..."
-                  ></textarea>
-                </div>
-                <div v-if="saveError" class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50">
-                  <p class="text-sm text-red-600 dark:text-red-400">{{ saveError }}</p>
-                </div>
+              <!-- Form Content (was the original body) -->
+              <div v-else class="space-y-4">
+                  <div>
+                      <label for="comment_content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
+                      <textarea 
+                          v-model="formData.comment" 
+                          id="comment_content" 
+                          rows="5" 
+                          required 
+                          class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                          placeholder="Enter your comment..."
+                      ></textarea>
+                  </div>
+                  <div v-if="saveError" class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50">
+                      <p class="text-sm text-red-600 dark:text-red-400">{{ saveError }}</p>
+                  </div>
               </div>
-  
-              <!-- Modal Footer -->
-              <div class="flex items-center justify-end p-5 border-t border-gray-100 dark:border-gray-800">
-                <button @click="$emit('close')" type="button" class="px-5 py-2.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >Cancel</button>
-                <button type="submit" :disabled="isSaving" class="ml-3 px-5 py-2.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <span v-if="isSaving">Saving...</span>
-                  <span v-else>Save Changes</span>
-                </button>
-              </div>
-            </form>
-          </transition>
-        </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-end p-5 border-t border-gray-100 dark:border-gray-800">
+              <button @click="$emit('close')" type="button" class="px-5 py-2.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >Cancel</button>
+              <!-- MODIFIED: Disable save button while loading or saving -->
+              <button type="submit" :disabled="loading || isSaving" class="ml-3 px-5 py-2.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <span v-if="isSaving">Saving...</span>
+                <span v-else>Save Changes</span>
+              </button>
+            </div>
+          </form>
+        </transition>
       </div>
-    </transition>
-  </template>
+    </div>
+  </transition>
+</template>
   
-  <script setup>
+<script setup>
 import { ref, watch } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
@@ -86,7 +105,6 @@ const toast = useToast();
 
 const formData = ref({
   comment: '',
-  is_approved: false,
 });
 const isSaving = ref(false);
 const saveError = ref(null);
@@ -124,11 +142,11 @@ watch(() => [props.isVisible, props.commentId], ([newIsVisible, newCommentId]) =
     fetchCommentDetails();
   } else {
     // Reset form when modal is hidden or ID is cleared
-    formData.value = { comment: '', is_approved: false };
+    formData.value = { comment: '' };
     fetchError.value = null;
     saveError.value = null;
   }
-});
+}, { immediate: true }); // Use immediate to fetch if modal is opened with pre-set props
 
 const handleSubmit = async () => {
   if (!props.commentId) {
@@ -149,6 +167,7 @@ const handleSubmit = async () => {
     
     toast.success('Saved successfully!');
     emit('saved'); // Notify the parent to refresh
+    emit('close'); // Close modal on success
   } catch (err) {
     saveError.value = err.response?.data?.message || "An error occurred while saving.";
     toast.error(saveError.value);

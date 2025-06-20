@@ -87,14 +87,26 @@
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{formatDate(user.created_at)|| 'N/A' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button @click="openUserDetailModal(user.id)" type="button"
-                      class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium">View</button>
-                    <button @click="openUserEditModal(user.id)" v-if="isAdmin" type="button"
-                      class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
-                    <button @click="openConfirmDeleteModal(user.id)" v-if="user.role !== 'admin' && isAdmin" type="button"
-                      class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
-                  </td>
+                  <td class="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
+  <button @click="openUserDetailModal(user.id)" type="button"
+    class="px-3 py-1 rounded-md font-medium transition-colors
+     text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800
+     dark:text-indigo-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300">
+    View
+  </button>
+  <button @click="openUserEditModal(user.id)" v-if="isAdmin" type="button"
+    class="px-3 py-1 rounded-md font-medium transition-colors
+     text-blue-600 hover:bg-blue-50 hover:text-blue-800
+     dark:text-blue-400 dark:hover:bg-blue-900/30 dark:hover:text-blue-300">
+    Edit
+  </button>
+  <button @click="openConfirmDeleteModal(user.id)" v-if="user.role !== 'admin' && isAdmin" type="button"
+    class="px-3 py-1 rounded-md font-medium transition-colors
+     text-red-600 hover:bg-red-50 hover:text-red-800
+     dark:text-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300">
+    Delete
+  </button>
+</td>
                 </tr>
               </tbody>
             </table>

@@ -88,25 +88,32 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                   {{ article.comments_count || 'No Comment' }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                  <button @click="openArticleViewModal(article.id)" type="button"
-                    class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium">
-                    View
-                  </button>
-                  <button @click="openEditModal(article.id)" type="button"
-                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">
-                    Edit
-                  </button>
-                  <button @click="goToCommentPage(article.id)" type="button"
-                    class="text-black-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">
-                    Comments
-                  </button>
-                  <!-- Updated Delete Button -->
-                  <button @click="openConfirmDeleteModal(article.id)" type="button"
-                    class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">
-                    Delete
-                  </button>
-                </td>
+                <td class="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
+  <button @click="openArticleViewModal(article.id)" type="button"
+    class="px-3 py-1 rounded-md font-medium transition-colors
+     text-blue-600 hover:bg-blue-50 hover:text-blue-800
+     dark:text-blue-400 dark:hover:bg-blue-900/30 dark:hover:text-blue-300">
+    View
+  </button>
+  <button @click="openEditModal(article.id)" type="button"
+    class="px-3 py-1 rounded-md font-medium transition-colors
+     text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800
+     dark:text-emerald-400 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300">
+    Edit
+  </button>
+  <button @click="goToCommentPage(article.id)" type="button"
+    class="px-3 py-1 rounded-md font-medium transition-colors
+     text-purple-600 hover:bg-purple-50 hover:text-purple-800
+     dark:text-purple-400 dark:hover:bg-purple-900/30 dark:hover:text-purple-300">
+    Comments
+  </button>
+  <button @click="openConfirmDeleteModal(article.id)" type="button"
+    class="px-3 py-1 rounded-md font-medium transition-colors
+     text-rose-600 hover:bg-rose-50 hover:text-rose-800
+     dark:text-rose-400 dark:hover:bg-rose-900/30 dark:hover:text-rose-300">
+    Delete
+  </button>
+</td>
               </tr>
             </tbody>
           </table>
