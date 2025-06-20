@@ -51,7 +51,7 @@
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(tag.created_at) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button @click="openEditTagModal(tag.id)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
-                    <button @click="openConfirmDeleteModal(tag.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
+                    <button v-if="isAdmin" @click="openConfirmDeleteModal(tag.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
                   </td>
                 </tr>
               </tbody>
@@ -150,6 +150,7 @@ import {
   Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationNext, PaginationPrevious,
 } from '@/components/ui/pagination';
 import TagEditModal from './tagsUpdateCom.vue'; // Corrected import name
+import { useUserRole } from '@/composables/userRole'
 
 const tags = ref([]);
 const loadingTags = ref(true);
@@ -173,6 +174,8 @@ const tagToEditId = ref(null);
 const showConfirmDeleteModal = ref(false);
 const tagToDeleteId = ref(null);
 const isDeleting = ref(false);
+
+const { isAdmin, isEditor, role, loading } = useUserRole();
 
 const fetchTags = async (page = 1) => {
   loadingTags.value = true;

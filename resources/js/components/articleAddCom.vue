@@ -257,7 +257,7 @@ import { useToast } from 'vue-toastification';
 
 const toast = useToast();
 const article = ref({
-  title: '', summary: '', content: '', author_id: '', category_id: null,
+  title: '', summary: '', content: '', author_id: '', category_id: '',
   status: 'Draft', scheduled_publish_time: null, published_at: null, cover_image_url: '', tags: [], isCommentable: true
 });
 const isSubmitting = ref(false);

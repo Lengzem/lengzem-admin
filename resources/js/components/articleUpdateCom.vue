@@ -57,7 +57,7 @@
                                     Author <span class="text-red-500">*</span>
                                 </label>
                                 <div class="mt-1 relative rounded-md shadow-sm">
-                                    <select id="authorId" v-model.number="article.author_id" required
+                                    <select id="authorId" v-model="article.author_id" required
                                         class="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-gray-700 dark:text-gray-100 py-2.5 px-3 border">
                                         <option value="" disabled selected>Select author</option>
                                         <option v-for="author in authors" :key="author.id" :value="author.id">
@@ -294,7 +294,7 @@ const emit = defineEmits(['articleUpdated', 'closeModal']);
 const toast = useToast();
 
 const article = ref({
-    title: '', summary: '', content: '', author_id: null, category_id: null,
+    title: '', summary: '', content: '', author_id: '', category_id: '',
     status: 'Draft', scheduled_publish_time: null, published_at: null, cover_image_url: '', tags: [], isCommentable: true
 });
 
@@ -364,10 +364,14 @@ const fetchData = async (endpoint, dataRef, loadingRef, errorRef, nameField = 'n
   errorRef.value = null;
   try {
     const response = await axios.get(route('proxy.get'), { params: { endpoint } });
+    console.log(`Fetched from ${endpoint}:`, response.data);
+
     if (response.data?.status === true && Array.isArray(response.data.data?.data)) {
       dataRef.value = response.data.data.data.map(item => ({
-        id: item.id,
-        name: item[nameField] || item.name || item.title || `Unnamed (ID: ${item.id})`,
+        // FIX #3: Prioritize `item.uid` for the ID. This is the full Firebase ID.
+        // The dropdown's <option :value> will now use this full string.
+        id: item.uid || item.id,
+        name: item[nameField] || item.name || `Unnamed (ID: ${item.id})`,
       }));
     } else {
       errorRef.value = `Failed to load ${endpoint}: Invalid data format.`;
@@ -516,7 +520,7 @@ onMounted(async () => {
     // Fetch all necessary data in parallel for speed
     await Promise.all([
     fetchArticleData(props.articleId),
-    fetchData('authors', authors, ref(false), ref(null), 'pen_name'),
+    fetchData('users/editors', authors, ref(false), ref(null), 'pen_name'),
 fetchData('categories', categories, ref(false), ref(null)),
         searchTags('') // Initial fetch for all tags
     ]);

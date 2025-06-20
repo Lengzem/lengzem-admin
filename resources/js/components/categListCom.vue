@@ -51,7 +51,7 @@
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(category.created_at) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button @click="openEditCategoryModal(category.id)" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
-                    <button @click="openConfirmDeleteModal(category.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
+                    <button v-if="isAdmin" @click="openConfirmDeleteModal(category.id)" type="button" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
                   </td>
                 </tr>
               </tbody>
@@ -124,6 +124,9 @@ import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 import CategoryEditModal from './categUpdateCom.vue';
+import { useUserRole } from '@/composables/userRole';
+
+const { isAdmin, isEditor, role, loading } = useUserRole();
 
 const categories = ref([]);
 const loadingCategories = ref(true);

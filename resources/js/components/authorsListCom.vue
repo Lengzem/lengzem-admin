@@ -88,11 +88,11 @@
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{
             formatDate(author.created_at) }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button @click="openAuthorViewModal(author.id)" type="button"
+                    <button v-if="isAdmin || isEditor" @click="openAuthorViewModal(author.id)" type="button"
                       class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium">View</button>
-                    <button @click="openAuthorEditModal(author.id)" type="button"
+                    <button v-if="isAdmin" @click="openAuthorEditModal(author.id)" type="button"
                       class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
-                    <button @click="openConfirmDeleteModal(author.id)" type="button"
+                    <button v-if="isAdmin" @click="openConfirmDeleteModal(author.id)" type="button"
                       class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
                   </td>
                 </tr>
@@ -203,6 +203,9 @@ import {
 } from '@/components/ui/pagination';
 import AuthorDetailModal from './authorsDetailsCom.vue';
 import AuthorEditModal from './authorsUpdateCom.vue';
+import { useUserRole } from '@/composables/userRole';
+
+const { isAdmin, isEditor, role, loading } = useUserRole();
 
 const toast = useToast();
 const authors = ref([]);

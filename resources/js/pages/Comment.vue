@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import categList from '../components/categListCom.vue';
+import commAdd from '@/components/commAddCom.vue';
 import commList from '@/components/commListCom.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -29,6 +29,7 @@ onMounted(() => {
     <Head title="Comments" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
+        <commAdd />
         <commList />
     </AppLayout>
 </template>

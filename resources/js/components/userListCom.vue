@@ -90,9 +90,9 @@
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button @click="openUserDetailModal(user.id)" type="button"
                       class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors font-medium">View</button>
-                    <button @click="openUserEditModal(user.id)" type="button"
+                    <button @click="openUserEditModal(user.id)" v-if="isAdmin" type="button"
                       class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors font-medium">Edit</button>
-                    <button @click="openConfirmDeleteModal(user.id)" v-if="user.role !== 'admin'" type="button"
+                    <button @click="openConfirmDeleteModal(user.id)" v-if="user.role !== 'admin' && isAdmin" type="button"
                       class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Delete</button>
                   </td>
                 </tr>
@@ -210,6 +210,9 @@ import {
   Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationNext, PaginationPrevious,
 } from '@/components/ui/pagination';
 import UserEditModal from './userUpdateCom.vue';
+import { useUserRole } from '@/composables/userRole';
+
+const { isAdmin, isEditor, role, loading } = useUserRole();
 
 const users = ref([]);
 const loadingUsers = ref(true);
