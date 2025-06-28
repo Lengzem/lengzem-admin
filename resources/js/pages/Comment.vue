@@ -29,7 +29,7 @@ onMounted(() => {
     <Head title="Comments" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <commAdd />
-        <commList />
+      <commList />  
+      <commAdd />
     </AppLayout>
 </template>

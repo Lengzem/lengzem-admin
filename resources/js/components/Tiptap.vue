@@ -1,11 +1,13 @@
 <script setup>
+// ... all your existing script setup code ...
+// NO CHANGES ARE NEEDED IN THE SCRIPT SECTION
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { Color } from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
 import { Image } from '@tiptap/extension-image'
+import ListItem from '@tiptap/extension-list-item'
+import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import { watch } from 'vue'
 
@@ -33,7 +35,10 @@ import Undo from 'vue-material-design-icons/Undo.vue'
 import Redo from 'vue-material-design-icons/Redo.vue'
 
 const props = defineProps({
-  modelValue: String,
+  modelValue: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -63,34 +68,38 @@ const editor = useEditor({
   },
   extensions: [
     StarterKit.configure({
-      heading: {
-        levels: [1, 2, 3],
+      // The Link extension is part of StarterKit, configure it here
+      link: {
+        openOnClick: false, // Prevent navigation when clicking links in editor
       },
     }),
-    TextStyle,
-    Color,
+    // ✅ Add missing extensions
     Underline,
     TextAlign.configure({
-      types: ['heading', 'paragraph'],
+      types: ['heading', 'paragraph'], // Allow alignment for headings and paragraphs
     }),
-    Link.configure({
-      openOnClick: false,
-      autolink: true,
-    }),
+    Color.configure({ types: [TextStyle.name, ListItem.name] }),
+    TextStyle.configure({ types: [ListItem.name] }),
     CustomImage, // 👈 Use extended image with inline style support
   ],
   editorProps: {
     attributes: {
-      class: 'border-t-0 p-4 min-h-[40rem] max-h-[50rem] overflow-y-auto outline-none prose dark:prose-invert max-w-none focus:outline-none',
+      class: 'tiptap border-t-0 p-4 min-h-[40rem] max-h-[50rem] overflow-y-auto outline-none prose dark:prose-invert max-w-none focus:outline-none',
     },
   },
 })
 
 // Watch for external modelValue changes and update editor content
 watch(() => props.modelValue, (newValue) => {
-  if (editor.value && editor.value.getHTML() === newValue) {
+  // Check if the editor content is already the same as the new value
+  const isSame = editor.value.getHTML() === newValue
+
+  // If the content is the same, do nothing to avoid an infinite loop
+  if (isSame) {
     return
   }
+
+  // Otherwise, update the editor's content
   editor.value?.commands.setContent(newValue, false)
 })
 
@@ -122,13 +131,15 @@ const addImage = () => {
 }
 
 // 🎨 Text color
-const setTextColor = (color) => {
-  editor.value.chain().focus().setColor(color).run()
+const setTextColor = (event) => {
+  editor.value.chain().focus().setColor(event.target.value).run()
 }
 </script>
 
 
 <template>
+  <!-- ... all your existing template code ... -->
+  <!-- NO CHANGES ARE NEEDED IN THE TEMPLATE SECTION -->
   <div class="tiptap-container">
     <section v-if="editor" class="toolbar">
       <!-- Group 1: Basic Formatting -->
@@ -147,16 +158,16 @@ const setTextColor = (color) => {
       <div class="divider"></div>
 
       <!-- Text Color -->
-      <input type="color" @input="setTextColor($event.target.value)" :value="editor.getAttributes('textStyle').color" />
+      <input type="color" @input="setTextColor" :value="editor.getAttributes('textStyle').color || '#000000'" title="Text Color"/>
 
       <!-- Group 2: Headings & Paragraph -->
-      <button @click="editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }">
+      <button @click="editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }" title="Heading 1">
         <FormatHeader1 />
       </button>
-      <button @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }">
+      <button @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }" title="Heading 2">
         <FormatHeader2 />
       </button>
-      <button @click="editor.chain().focus().toggleHeading({ level: 3 }).run()" :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }">
+      <button @click="editor.chain().focus().toggleHeading({ level: 3 }).run()" :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }" title="Heading 3">
         <FormatHeader3 />
       </button>
       <button type="button" @click="editor.chain().focus().setParagraph().run()" :class="{ 'is-active': editor.isActive('paragraph') }" title="Paragraph">
@@ -171,20 +182,20 @@ const setTextColor = (color) => {
       <button type="button" @click="editor.chain().focus().setTextAlign('center').run()" :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }" title="Align Center">
         <FormatAlignCenter />
       </button>
-      <button type="button" @click="editor.chain().focus().setTextAlign('justify').run()" :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }" title="Align Justify">
-        <FormatAlignJustify />
-      </button>
       <button type="button" @click="editor.chain().focus().setTextAlign('right').run()" :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }" title="Align Right">
         <FormatAlignRight />
+      </button>
+      <button type="button" @click="editor.chain().focus().setTextAlign('justify').run()" :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }" title="Align Justify">
+        <FormatAlignJustify />
       </button>
 
       <div class="divider"></div>
 
       <!-- Group 4: Lists -->
-      <button @click="editor.chain().focus().toggleBulletList().run()" :class="{ 'is-active': editor.isActive('bulletList') }">
+      <button @click="editor.chain().focus().toggleBulletList().run()" :class="{ 'is-active': editor.isActive('bulletList') }" title="Bulleted List">
         <FormatListBulleted />
       </button>
-      <button @click="editor.chain().focus().toggleOrderedList().run()" :class="{ 'is-active': editor.isActive('orderedList') }">
+      <button @click="editor.chain().focus().toggleOrderedList().run()" :class="{ 'is-active': editor.isActive('orderedList') }" title="Numbered List">
         <FormatListNumbered />
       </button>
       <div class="divider"></div>
@@ -261,6 +272,20 @@ const setTextColor = (color) => {
       }
     }
 
+    input[type="color"] {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        padding: 2px;
+        border-radius: 4px;
+
+        &:hover {
+          background-color: #e5e7eb;
+        }
+    }
+
     .divider {
       width: 1px;
       height: 1.25rem;
@@ -269,5 +294,113 @@ const setTextColor = (color) => {
       margin-right: 0.25rem;
     }
   }
+}
+
+// Scoped styles for the Tiptap editor content
+// Using :deep() to apply styles to the child elements generated by Tiptap
+:deep(.tiptap) {
+    &:focus {
+      outline: none;
+    }
+
+    p {
+      margin: 1rem 0;
+    }
+
+    > *:first-child {
+      margin-top: 0;
+    }
+
+    /********** THE FIX IS HERE **********/
+    /* List styles */
+    ul,
+    ol {
+      margin: 1rem 0;
+      padding: 0 0 0 2rem; /* Give lists some left padding for indentation */
+
+      /* This is the key change: ensures markers are rendered inside the content flow */
+      list-style-position: inside;
+
+      li p {
+        display: inline; /* Makes paragraph inside list item flow correctly */
+        margin-top: 0.25em;
+        margin-bottom: 0.25em;
+      }
+    }
+    /* Style differently for different list types if you want */
+    ul {
+      list-style-type: disc;
+    }
+    ol {
+      list-style-type: decimal;
+    }
+    /********** END OF FIX **********/
+
+
+    /* Heading styles */
+    h1, h2, h3 {
+      line-height: 1.1;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      text-wrap: pretty;
+    }
+
+    h1, h2 {
+      margin-top: 3.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.5em; }
+    h3 { font-size: 1.17em; }
+
+    /* Code and preformatted text styles */
+    code {
+      background-color: #f1f1f1;
+      border-radius: 0.4rem;
+      color: #d63384;
+      font-size: 0.85rem;
+      padding: 0.25em 0.3em;
+    }
+
+    pre {
+      background: #1e1e1e;
+      border-radius: 0.5rem;
+      color: #d4d4d4;
+      font-family: 'JetBrainsMono', 'Courier New', monospace;
+      margin: 1.5rem 0;
+      padding: 0.75rem 1rem;
+
+      code {
+        background: none;
+        color: inherit;
+        font-size: 0.85rem;
+        padding: 0;
+      }
+    }
+
+    blockquote {
+      border-left: 3px solid #d1d5db;
+      margin: 1.5rem 0;
+      padding-left: 1rem;
+      font-style: italic;
+      color: #6b7280;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 2rem 0;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 0.5rem;
+    }
+
+    u {
+      text-decoration: underline;
+    }
 }
 </style>
