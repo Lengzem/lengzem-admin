@@ -14,6 +14,7 @@ Route::get('category', fn () => Inertia::render('Category'))->name('category');
 Route::get('tag', fn () => Inertia::render('Tag'))->name('tag');
 Route::get('author', fn () => Inertia::render('Authors'))->name('author');
 Route::get('article', fn () => Inertia::render('Article'))->name('article');
+Route::get('media', fn () => Inertia::render('Media'))->name('media');
 Route::get('article/add', fn () => Inertia::render('AddArticle'))->name('articalAdd');
 Route::get('subscription', fn () => Inertia::render('SubList'))->name('subscription');
 Route::get('article/comment', function (Request $request) {

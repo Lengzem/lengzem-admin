@@ -1,0 +1,259 @@
+<template>
+    <div class="max-w-10xl px-4 sm:px-6 lg:px-8 py-8">
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800 transition-all duration-300">
+        <!-- CHANGE: Component Header is now dynamic -->
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 px-6 py-4 sm:px-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-white tracking-tight flex items-center capitalize">
+              <component :is="currentIcon" class="w-6 h-6 mr-2" />
+              {{ activeTab.slice(0, -1) }} Management
+            </h2>
+          </div>
+        </div>
+
+        <!-- CHANGE: Tabs to switch between Video and Audio -->
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex space-x-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg max-w-sm">
+            <button
+              v-for="tab in tabs"
+              :key="tab.value"
+              @click="switchTab(tab.value)"
+              :class="[
+                'w-full py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-800',
+                activeTab === tab.value
+                  ? 'bg-indigo-600 text-white shadow'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ]"
+            >
+              {{ tab.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions & Search Section -->
+        <div class="px-6 pt-6 pb-2 sm:px-8 sm:pt-8">
+          <!-- Action Buttons (now dynamic) -->
+          <div class="flex flex-col sm:flex-row gap-3 mb-6">
+            <button
+              type="button"
+              @click="toggleSearchInput"
+              class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+              :class="{ 'ring-2 ring-offset-2 ring-blue-400 dark:ring-blue-300': showSearchInput }"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <span class="capitalize">{{ showSearchInput ? 'Hide Search' : `Search ${activeTab.slice(0, -1)}` }}</span>
+            </button>
+            <button
+              type="button"
+              @click="openAddItemModal"
+              class="w-full sm:w-auto px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+              <span class="capitalize">Add New {{ activeTab.slice(0, -1) }}</span>
+            </button>
+          </div>
+
+          <!-- Search Input Section with Transition -->
+          <transition
+            enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-4 sm:translate-y-0 sm:scale-95" enter-to-class="opacity-100 translate-y-0 sm:scale-100"
+            leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100 translate-y-0 sm:scale-100" leave-to-class="opacity-0 -translate-y-4 sm:translate-y-0 sm:scale-95"
+          >
+            <div v-if="showSearchInput" class="mb-6">
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center capitalize">
+                <svg class="w-5 h-5 mr-2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                Find {{ activeTab }}
+              </h3>
+              <div class="relative flex-grow w-full">
+                <input ref="searchInputField" type="text" v-model="searchQuery" :placeholder="`Enter ${activeTab.slice(0,-1)} title to search...`"
+                  class="block w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                />
+                 <div v-if="isSearching" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                     <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                </div>
+              </div>
+
+              <!-- CHANGE: Search Results Area is now dynamic for Video/Audio -->
+              <div v-if="searchPerformed" class="mt-6">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Search results for: <strong class="text-gray-800 dark:text-gray-200">"{{ lastSearchQuery }}"</strong></p>
+                <ul v-if="searchResults.length > 0" class="space-y-3 max-h-80 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-900/30 custom-scrollbar">
+                  <li v-for="item in searchResults" :key="item.id" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3">
+                    <div class="flex items-center space-x-4">
+                      <!-- Video Result -->
+                      <template v-if="activeTab === 'videos'">
+                        <img :src="item.thumbnail_url" alt="thumbnail" class="w-24 h-14 object-cover rounded-md bg-gray-200 dark:bg-gray-700 flex-shrink-0" v-if="item.thumbnail_url">
+                        <div v-else class="w-24 h-14 bg-gray-200 dark:bg-gray-700 rounded-md flex-shrink-0 flex items-center justify-center text-gray-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </div>
+                      </template>
+                       <!-- Audio Result -->
+                      <template v-if="activeTab === 'audios'">
+                         <div class="w-14 h-14 bg-cyan-100 dark:bg-cyan-900/50 rounded-md flex-shrink-0 flex items-center justify-center text-gray-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-cyan-600 dark:text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" /></svg>
+                        </div>
+                      </template>
+
+                      <div class="min-w-0 flex-grow">
+                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" :title="item.title">{{ item.title }}</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-400 truncate">Author: {{ item.author?.name || 'N/A' }}</p>
+                          <div v-if="activeTab === 'audios'" class="text-xs text-gray-500 dark:text-gray-400">Duration: {{ item.duration || 'N/A' }}</div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+                <div v-else-if="!isSearching" class="p-6 text-center text-gray-500 dark:text-gray-400 border border-dashed rounded-lg">
+                  No {{ activeTab }} found matching your criteria.
+                </div>
+              </div>
+            </div>
+          </transition>
+
+          <!-- Placeholder for Main List -->
+          <div class="px-6 pb-6 sm:px-8 sm:pb-8" v-if="!showSearchInput">
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 capitalize">
+                All {{ activeTab }} (Placeholder)
+              </h3>
+              <div class="p-6 text-center text-gray-400 dark:text-gray-500 border border-dashed rounded-lg">
+                A list of all {{ activeTab }} would be displayed here.
+              </div>
+          </div>
+        </div>
+      </div>
+
+        <!-- CHANGE: Conditionally render the correct "Add" modal. You will need to create these components. -->
+        <VideoAddModal
+          v-if="activeTab === 'videos'"
+          :is-visible="showItemAddModal"
+          @close="closeAddItemModal"
+          @saved="handleItemSaved"
+        />
+        <AudioAddModal
+          v-if="activeTab === 'audios'"
+          :is-visible="showItemAddModal"
+          @close="closeAddItemModal"
+          @saved="handleItemSaved"
+        />
+      </div>
+    </template>
+
+    <script setup>
+    import { ref, nextTick, watch, onUnmounted, computed, shallowRef } from 'vue';
+    import axios from 'axios';
+    import { useToast } from 'vue-toastification';
+    // CHANGE: Import specific modals for each content type
+    import VideoAddModal from './videoAddCom.vue'; // Assumes you create this component
+    import AudioAddModal from './audioAddCom.vue'; // Assumes you create this component
+    import { FilmIcon, MusicalNoteIcon } from '@heroicons/vue/24/outline';
+
+  // CHANGE: State for tabs
+  const activeTab = ref('videos');
+  const tabs = [
+    { name: 'Videos', value: 'videos', icon: shallowRef(FilmIcon) },
+    { name: 'Audios', value: 'audios', icon: shallowRef(MusicalNoteIcon) },
+  ];
+
+  const currentIcon = computed(() => tabs.find(t => t.value === activeTab.value)?.icon);
+
+  const showSearchInput = ref(false);
+  const searchQuery = ref('');
+  const lastSearchQuery = ref('');
+  const searchResults = ref([]);
+  const isSearching = ref(false);
+  const searchPerformed = ref(false);
+  const searchInputField = ref(null);
+  const toast = useToast();
+
+  // CHANGE: Generic state for the Add modal
+  const showItemAddModal = ref(false);
+  let debounceTimer = null;
+
+  const resetSearch = () => {
+    searchQuery.value = '';
+    searchResults.value = [];
+    searchPerformed.value = false;
+    isSearching.value = false;
+    clearTimeout(debounceTimer);
+  };
+
+  const switchTab = (tabValue) => {
+    activeTab.value = tabValue;
+    if (showSearchInput.value) {
+      resetSearch();
+    }
+  };
+
+  const toggleSearchInput = async () => {
+    showSearchInput.value = !showSearchInput.value;
+    if (showSearchInput.value) {
+      await nextTick();
+      searchInputField.value?.focus();
+    } else {
+      resetSearch();
+    }
+  };
+
+  // CHANGE: Search function is now dynamic
+  const performSearch = async () => {
+    const query = searchQuery.value.trim();
+    if (!query) {
+      searchResults.value = [];
+      searchPerformed.value = false;
+      return;
+    }
+
+    isSearching.value = true;
+    searchPerformed.value = true;
+    lastSearchQuery.value = query;
+
+    try {
+        const response = await axios.get(route('proxy.get'), {
+            params: {
+                endpoint: `${activeTab.value}/search`, // e.g., 'videos/search'
+                name: query // Assuming both endpoints search by 'name' for the title
+            }
+        });
+        // The response for video/audio search might be nested differently. Adjust if needed.
+        searchResults.value = response.data.data?.data || response.data.data || [];
+    } catch (error) {
+        console.error(`Error searching for ${activeTab.value}:`, error);
+        toast.error(`Failed to search for ${activeTab.value}.`);
+        searchResults.value = [];
+    } finally {
+        isSearching.value = false;
+    }
+  };
+
+  watch(searchQuery, (newQuery) => {
+    clearTimeout(debounceTimer);
+    if (newQuery.trim() === '') {
+        searchResults.value = [];
+        searchPerformed.value = false;
+        isSearching.value = false;
+        return;
+    }
+    isSearching.value = true;
+    debounceTimer = setTimeout(() => {
+        performSearch();
+    }, 500);
+  });
+
+  onUnmounted(() => {
+    clearTimeout(debounceTimer);
+  });
+
+  // CHANGE: Generic functions to control the Add modal
+  const openAddItemModal = () => {
+    showItemAddModal.value = true;
+  };
+
+  const closeAddItemModal = () => {
+    showItemAddModal.value = false;
+  };
+
+  const handleItemSaved = () => {
+    closeAddItemModal();
+    toast.success(`${activeTab.value.slice(0,-1)} saved successfully!`);
+    if (showSearchInput.value && searchQuery.value) {
+      performSearch();
+    }
+  };
+  </script>

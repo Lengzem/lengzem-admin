@@ -4,7 +4,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, ChartBar, Crown, Folder, LayoutGrid, Newspaper, Notebook, Pencil, Tag, User } from 'lucide-vue-next';
+import { BookOpen, ChartBar, Crown, Folder, LayoutGrid, Newspaper, Notebook, Pencil, Tag, User, Play } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import Comment from '@/pages/Comment.vue';
 
@@ -38,6 +38,11 @@ const mainNavItems: NavItem[] = [
         title: 'Tag',
         href: '/tag',
         icon: Tag,
+    },
+    {
+        title: 'Video & Audio',
+        href: '/media',
+        icon: Play,
     },
     {
         title: 'Subscription',
