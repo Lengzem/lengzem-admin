@@ -55,13 +55,6 @@
                 <!-- Author and Status -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label for="audio_author" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Author <span class="text-red-500">*</span></label>
-                    <select v-model="formData.author_id" id="audio_author" required class="form-input">
-                      <option value="" disabled>Select an author</option>
-                      <option v-for="author in authors" :key="author.id" :value="author.id">{{ author.name }}</option>
-                    </select>
-                  </div>
-                  <div>
                     <label for="audio_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                     <select v-model="formData.status" id="audio_status" class="form-input">
                       <option value="draft">Draft</option>
@@ -126,6 +119,7 @@
   import { ref, watch } from 'vue';
   import axios from 'axios';
   import { useToast } from 'vue-toastification';
+  import { useAuthStore } from '@/stores/authStore';
 
   const props = defineProps({
     isVisible: { type: Boolean, default: false },
@@ -133,9 +127,21 @@
 
   const emit = defineEmits(['close', 'saved']);
   const toast = useToast();
+  const authStore = useAuthStore();
+
+  // Ensure UID is reactive after authStore is ready
+const uid = ref(null);
+watch(
+  () => authStore.user,
+  (user) => {
+    uid.value = user?.uid || null;
+  },
+  { immediate: true }
+);
+
 
   // Initial form data for an audio track
-  const initialFormData = {
+  const createInitialFormData = () => ({
     title: '',
     description: '',
     url: '',
@@ -146,48 +152,33 @@
     is_premium: false,
     duration: '',
     language: 'Mizo' // Default language if needed
-  };
+});
 
-  const formData = ref({ ...initialFormData });
+const formData = ref(createInitialFormData());
   const isSaving = ref(false);
   const saveError = ref(null);
 
-  const authors = ref([]);
-
-  // Fetch authors when the modal becomes visible
-  const fetchAuthors = async () => {
-    if (authors.value.length > 0) return;
-
-    try {
-      const response = await axios.get(route('proxy.get'), { params: { endpoint: 'users/editors' } });
-      if (response.data?.status && Array.isArray(response.data.data?.data)) {
-        authors.value = response.data.data.data.map(author => ({
-          id: author.id, // Use UID for Firebase ID
-          name: author.pen_name || author.name,
-        }));
-      }
-    } catch (err) {
-      console.error("Failed to fetch authors:", err);
-      toast.error("Could not load authors list.");
-    }
-  };
 
   watch(() => props.isVisible, (newValue) => {
-    if (newValue) {
-      formData.value = { ...initialFormData };
-      saveError.value = null;
-      fetchAuthors(); // Fetch authors when modal opens
-    }
-  });
+  if (newValue) {
+    formData.value = createInitialFormData();
+    formData.value.author_id = uid.value;
+    saveError.value = null;
+  }
+});
 
   const handleSubmit = async () => {
     isSaving.value = true;
     saveError.value = null;
 
     try {
-        console.log("video data:", formData.value)
-      // THE ONLY CORE CHANGE: Endpoint is now 'audios'
-      await axios.post(route('proxy.post'), formData.value, {
+        const payload = {
+      ...formData.value,
+      author_id: uid.value,
+    };
+
+    console.log("🚀 Submitting video:", payload);
+      await axios.post(route('proxy.post'), payload, {
           params: { endpoint: 'audios' }
       });
 

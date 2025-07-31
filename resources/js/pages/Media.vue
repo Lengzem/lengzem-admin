@@ -4,8 +4,8 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
-import videoSearch from '@/components/videoSearchCom.vue';
-import videoList from '../components/videoListCom.vue';
+import videoSearch from '@/components/mediaSearchCom.vue';
+import videoList from '@/components/mediaListCom.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

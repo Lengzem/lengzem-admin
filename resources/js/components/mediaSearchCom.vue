@@ -208,7 +208,7 @@
         const response = await axios.get(route('proxy.get'), {
             params: {
                 endpoint: `${activeTab.value}/search`, // e.g., 'videos/search'
-                name: query // Assuming both endpoints search by 'name' for the title
+                title: query // Assuming both endpoints search by 'name' for the title
             }
         });
         // The response for video/audio search might be nested differently. Adjust if needed.

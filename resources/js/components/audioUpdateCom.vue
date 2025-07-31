@@ -13,7 +13,7 @@
               <div v-if="isVisible" class="relative bg-white dark:bg-gray-800 w-full max-w-4xl rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between p-4 sm:p-5 rounded-xl border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10">
-                  <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">Edit Video</h2>
+                  <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">Edit Audio</h2>
                   <button @click="$emit('close-modal')" type="button" class="p-1 rounded-full text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
@@ -24,14 +24,14 @@
                   <!-- Loading State -->
                   <div v-if="isLoading" class="flex justify-center items-center h-64">
                     <div class="text-center">
-                      <svg class="animate-spin mx-auto h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                      <p class="mt-4 text-gray-600 dark:text-gray-400">Loading video data...</p>
+                      <svg class="animate-spin mx-auto h-10 w-10 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      <p class="mt-4 text-gray-600 dark:text-gray-400">Loading audio data...</p>
                     </div>
                   </div>
 
                   <!-- Error State -->
                   <div v-else-if="error" class="p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <h3 class="text-lg font-semibold text-red-700 dark:text-red-300">Could not load video</h3>
+                    <h3 class="text-lg font-semibold text-red-700 dark:text-red-300">Could not load audio</h3>
                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
                   </div>
 
@@ -39,27 +39,27 @@
                   <form v-else-if="formData" @submit.prevent="handleUpdate" class="space-y-6">
                     <!-- Form fields... -->
                     <div>
-                      <label for="video_title_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title <span class="text-red-500">*</span></label>
-                      <input v-model="formData.title" type="text" id="video_title_edit" required class="form-input" placeholder="Enter video title">
+                      <label for="audio_title_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title <span class="text-red-500">*</span></label>
+                      <input v-model="formData.title" type="text" id="audio_title_edit" required class="form-input" placeholder="Enter audio title">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <label for="video_url_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Video URL <span class="text-red-500">*</span></label>
-                        <input v-model="formData.url" type="url" id="video_url_edit" required class="form-input" placeholder="https://.../manifest.mpd">
+                        <label for="audio_url_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Audio URL <span class="text-red-500">*</span></label>
+                        <input v-model="formData.url" type="url" id="audio_url_edit" required class="form-input" placeholder="https://.../audio.mp3">
                       </div>
                       <div>
-                        <label for="thumbnail_url_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Thumbnail URL</label>
-                        <input v-model="formData.thumbnail_url" type="url" id="thumbnail_url_edit" class="form-input" placeholder="https://.../image.jpg">
+                        <label for="thumbnail_url_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cover Art URL</label>
+                        <input v-model="formData.thumbnail_url" type="url" id="thumbnail_url_edit" class="form-input" placeholder="https://.../cover-art.jpg">
                       </div>
                     </div>
                     <div v-if="formData.thumbnail_url" class="mt-2">
-                      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Thumbnail Preview:</p>
-                      <img :src="formData.thumbnail_url" alt="Thumbnail preview" class="max-h-32 rounded-lg border border-gray-200 dark:border-gray-600 object-cover" @error="formData.thumbnail_url = ''" />
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Cover Art Preview:</p>
+                      <img :src="formData.thumbnail_url" alt="Cover Art preview" class="max-h-32 rounded-lg border border-gray-200 dark:border-gray-600 object-cover" @error="formData.thumbnail_url = ''" />
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <label for="video_status_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                        <select v-model="formData.status" id="video_status_edit" class="form-input">
+                        <label for="audio_status_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        <select v-model="formData.status" id="audio_status_edit" class="form-input">
                           <option value="draft">Draft</option>
                           <option value="published">Published</option>
                           <option value="archived">Archived</option>
@@ -73,16 +73,16 @@
                       </div>
                       <div>
                         <label for="duration_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration</label>
-                        <input v-model="formData.duration" type="text" id="duration_edit" class="form-input" placeholder="e.g., 00:15:30">
+                        <input v-model="formData.duration" type="text" id="duration_edit" class="form-input" placeholder="e.g., 00:04:20">
                       </div>
                     </div>
                     <div>
-                      <label for="video_description_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                      <textarea v-model="formData.description" id="video_description_edit" rows="3" class="form-input" placeholder="A brief description of the video"></textarea>
+                      <label for="audio_description_edit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                      <textarea v-model="formData.description" id="audio_description_edit" rows="3" class="form-input" placeholder="A brief description of the audio track"></textarea>
                     </div>
                     <div class="flex items-center">
                         <input v-model="formData.is_premium" id="is_premium_edit" type="checkbox" class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-800 dark:checked:bg-blue-500">
-                        <label for="is_premium_edit" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">This is a premium video</label>
+                        <label for="is_premium_edit" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">This is a premium audio track</label>
                     </div>
 
                     <!-- Submission Error -->
@@ -123,10 +123,10 @@
 
   const props = defineProps({
     isVisible: { type: Boolean, default: false },
-    videoId: { type: [String, Number], default: null },
+    audioId: { type: [String, Number], default: null },
   });
 
-  const emit = defineEmits(['video-updated', 'close-modal']);
+  const emit = defineEmits(['audio-updated', 'close-modal']);
   const toast = useToast();
 
   const formData = ref(null);
@@ -135,24 +135,24 @@
   const error = ref(null);
   const saveError = ref(null);
 
-  const fetchVideoData = async (id) => {
+  const fetchAudioData = async (id) => {
     isLoading.value = true;
     error.value = null;
     formData.value = null;
     try {
-      const response = await axios.get(route('proxy.get'), { params: { endpoint: `videos/${id}` } });
+      const response = await axios.get(route('proxy.get'), { params: { endpoint: `audios/${id}` } });
       if (response.data?.status && response.data.data) {
-          const videoData = response.data.data;
+          const audioData = response.data.data;
           formData.value = {
-              ...videoData,
-              is_premium: !!videoData.is_premium,
-              release_date: videoData.release_date ? new Date(videoData.release_date).toISOString().split('T')[0] : ''
+              ...audioData,
+              is_premium: !!audioData.is_premium,
+              release_date: audioData.release_date ? new Date(audioData.release_date).toISOString().split('T')[0] : ''
           };
       } else {
-        throw new Error("Video data not found in API response.");
+        throw new Error("Audio data not found.");
       }
     } catch (err) {
-      error.value = err.response?.data?.message || "Could not retrieve video details.";
+      error.value = err.response?.data?.message || "Could not retrieve audio details.";
     } finally {
       isLoading.value = false;
     }
@@ -163,11 +163,11 @@
     isSaving.value = true;
     saveError.value = null;
     try {
-      await axios.put(route('proxy.put'), formData.value, { params: { endpoint: `videos/${props.videoId}` } });
-      toast.success('Video updated successfully!');
-      emit('video-updated');
+      await axios.put(route('proxy.put'), formData.value, { params: { endpoint: `audios/${props.audioId}` } });
+      toast.success('Audio updated successfully!');
+      emit('audio-updated');
     } catch (err) {
-      const errorMessage = err.response?.data?.error || "An error occurred while saving.";
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || "An error occurred while saving.";
       saveError.value = errorMessage;
       toast.error(errorMessage);
     } finally {
@@ -176,11 +176,9 @@
   };
 
   watch(() => props.isVisible, (newValue) => {
-    if (newValue && props.videoId) {
-      // Fetch data only when modal becomes visible with a valid ID
-      fetchVideoData(props.videoId);
+    if (newValue && props.audioId) {
+      fetchAudioData(props.audioId);
     } else if (!newValue) {
-      // Reset state when modal is closed
       formData.value = null;
       error.value = null;
       saveError.value = null;

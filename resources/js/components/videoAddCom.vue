@@ -53,15 +53,6 @@
                 <!-- Author and Status -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label for="video_author" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Author <span class="text-red-500">*</span></label>
-                    <!-- v-model binds the selected option's VALUE to formData.author_id -->
-                    <select v-model="formData.author_id" id="video_author" required class="form-input">
-                      <option value="" disabled>Select an author</option>
-                      <!-- The :value attribute is bound to author.id, which holds the UID -->
-                      <option v-for="author in authors" :key="author.id" :value="author.id">{{ author.name }}</option>
-                    </select>
-                  </div>
-                  <div>
                     <label for="video_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                     <select v-model="formData.status" id="video_status" class="form-input">
                       <option value="draft">Draft</option>
@@ -122,84 +113,98 @@
   }
   </style>
 
-  <script setup>
-  import { ref, watch } from 'vue';
-  import axios from 'axios';
-  import { useToast } from 'vue-toastification';
+<script setup>
+import { ref, watch } from 'vue';
+import axios from 'axios';
+import { useToast } from 'vue-toastification';
+import { useAuthStore } from '@/stores/authStore';
 
-  const props = defineProps({
-    isVisible: { type: Boolean, default: false },
-  });
+const props = defineProps({
+  isVisible: { type: Boolean, default: false },
+});
 
-  const emit = defineEmits(['close', 'saved']);
-  const toast = useToast();
+const emit = defineEmits(['close', 'saved']);
+const toast = useToast();
+const authStore = useAuthStore();
 
-  const initialFormData = {
-    title: '',
-    description: '',
-    url: '',
-    thumbnail_url: '',
-    author_id: '', // This will be populated with the author's UID
-    status: 'draft',
-    release_date: '',
-    is_premium: false,
-    duration: '',
-    language: 'Mizo'
-  };
+const isSaving = ref(false);
+const saveError = ref(null);
 
-  const formData = ref({ ...initialFormData });
-  const isSaving = ref(false);
-  const saveError = ref(null);
+// Ensure UID is reactive after authStore is ready
+const uid = ref(null);
+watch(
+  () => authStore.user,
+  (user) => {
+    uid.value = user?.uid || null;
+  },
+  { immediate: true }
+);
 
-  const authors = ref([]);
+// Initial form data factory function
+const createInitialFormData = () => ({
+  title: '',
+  description: '',
+  url: '',
+  thumbnail_url: '',
+  author_id: uid.value, // This will get set when modal opens
+  status: 'draft',
+  release_date: '',
+  is_premium: false,
+  duration: '',
+  language: 'Mizo',
+});
 
-  const fetchAuthors = async () => {
-    if (authors.value.length > 0) return;
+const formData = ref(createInitialFormData());
 
-    try {
-      const response = await axios.get(route('proxy.get'), { params: { endpoint: 'users/editors' } });
-      if (response.data?.status && Array.isArray(response.data.data?.data)) {
-        // Here, we map the API's 'uid' to our local 'id' for the dropdown
-        authors.value = response.data.data.data.map(author => ({
-          id: author.id, // The author's UID is stored here
-          name: author.pen_name || author.name,
-        }));
-      }
-    } catch (err) {
-      console.error("Failed to fetch authors:", err);
-      toast.error("Could not load authors list.");
-    }
-  };
-
-  watch(() => props.isVisible, (newValue) => {
-    if (newValue) {
-      formData.value = { ...initialFormData };
-      saveError.value = null;
-      fetchAuthors();
-    }
-  });
-
-  const handleSubmit = async () => {
-    isSaving.value = true;
+watch(() => props.isVisible, (newValue) => {
+  if (newValue) {
+    formData.value = createInitialFormData();
+    formData.value.author_id = uid.value;
     saveError.value = null;
+  }
+});
 
-    try {
-        console.log("video data:", formData.value)
-      // The `formData.value` object now contains the selected author's UID in `author_id`
-      await axios.post(route('proxy.post'), formData.value, {
-          params: { endpoint: 'videos' }
-      });
+const handleSubmit = async () => {
+  if (!uid.value) {
+    saveError.value = 'User UID is not available.';
+    toast.error(saveError.value);
+    return;
+  }
 
-      toast.success('Video created successfully!');
-      emit('saved');
-    } catch (err) {
-      // Updated to use a more specific error key if available from your API
-      const errorMessage = err.response?.data?.error || err.response?.data?.error || "An error occurred while creating the video.";
-      saveError.value = errorMessage;
-      console.error("Failed to create video:", err.response?.data || err);
-      toast.error(errorMessage);
-    } finally {
-      isSaving.value = false;
+  isSaving.value = true;
+  saveError.value = null;
+
+  try {
+    const payload = {
+      ...formData.value,
+      author_id: uid.value,
+    };
+
+    console.log("🚀 Submitting video:", payload);
+
+    await axios.post(route('proxy.post'), payload, {
+      params: { endpoint: 'videos' },
+    });
+
+    toast.success('✅ Video created successfully!');
+    emit('saved');
+  } catch (err) {
+    const errorMessage =
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      'An error occurred while creating the video.';
+
+    saveError.value = errorMessage;
+    console.error("❌ Submission Error:", err.response?.data || err.message);
+    if (err.config?.data) {
+      try {
+        console.error("📋 Sent Data:", JSON.parse(err.config.data));
+      } catch (_) {}
     }
-  };
-  </script>
+
+    toast.error(errorMessage);
+  } finally {
+    isSaving.value = false;
+  }
+};
+</script>
