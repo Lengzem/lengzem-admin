@@ -17,6 +17,7 @@ Route::get('article', fn () => Inertia::render('Article'))->name('article');
 Route::get('media', fn () => Inertia::render('Media'))->name('media');
 Route::get('article/add', fn () => Inertia::render('AddArticle'))->name('articalAdd');
 Route::get('subscription', fn () => Inertia::render('SubList'))->name('subscription');
+Route::get('ads', fn () => Inertia::render('Ads'))->name('ads');
 Route::get('article/comment', function (Request $request) {
     return Inertia::render('Comment', [
         'article_id' => $request->input('article_id'),

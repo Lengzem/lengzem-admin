@@ -231,12 +231,6 @@ const verifyOtpAndLogin = async () => {
       </form>
   
       <div v-if="form.processing" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-        <dotlottie-player
-          src="https://lottie.host/1cbfa9df-7c2c-42c9-a861-f59ca88127f8/OrEOfu2zUL.lottie"
-          background="transparent"
-          speed="1"
-          style="width: 100px; height: 100px"
-          loop autoplay />
       </div>
     </AuthBase>
   </template>
